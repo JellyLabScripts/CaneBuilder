@@ -41,11 +41,14 @@ public class CaneBuilder {
 
     //states
     static boolean enabled = false;
-    static boolean diggingPath;
-    static boolean diggingTrench;
+    static boolean diggingPath = false;
+    static boolean diggingTrench = false;
 
 
-    // for digging part
+    // for digging trench path
+    static boolean slowDig;
+    static boolean inDiggingTrench;
+    // for digging path part
     static boolean walkingForward;
     static double initialX = 0;
     static double initialZ = 0;
@@ -92,90 +95,102 @@ public class CaneBuilder {
             double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
             double dy = Math.abs(mc.thePlayer.posY - mc.thePlayer.lastTickPosY);
             double dz = Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ);
-            Utils.hardRotate(90);
-            mc.thePlayer.rotationPitch = 11;
+
+
             mc.gameSettings.gammaSetting = 100;
             Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
             if (mc.currentScreen instanceof GuiInventory || mc.currentScreen instanceof GuiChat || mc.currentScreen instanceof GuiIngameMenu) {
                 updateKeys(false, false, false, false, false, false, false);
                 return;
             }
-            if(shouldEndDigging() && !(!Utils.isWalkable(Utils.getRightBlock()) && !Utils.isWalkable(Utils.getRightBlock()))){
-                walkingForward = false;
-                Utils.addCustomMessage("Ended process");
-                enabled = false;
-                updateKeys(false, false, false, false, false, false, false);
-                return;
+
+            if(diggingTrench){
+                if(inDiggingTrench){
+                    Utils.hardRotate(playerYaw);
+                    mc.thePlayer.rotationPitch = 19;
+                    updateKeys(true, false, false, false, true, false, false);
+                }
             }
-            if (dy == 0) {
-                if (!walkingForward) { //normal
-                    KeyBinding.setKeyBindState(keybindAttack, true);
-                    KeyBinding.setKeyBindState(keyBindShift, false);
-                    if (currentDirection.equals(direction.RIGHT))
-                        KeyBinding.setKeyBindState(keybindD, true);
-                    else if (currentDirection.equals(direction.LEFT))
-                        KeyBinding.setKeyBindState(keybindA, true);
-                    else
-                        walkingForward = true;
-                } else { // walking forward
+            if(diggingPath) {
+                if(shouldEndDigging() && !(!Utils.isWalkable(Utils.getRightBlock()) && !Utils.isWalkable(Utils.getRightBlock()))){
+                    walkingForward = false;
+                    Utils.addCustomMessage("Ended process");
+                    enabled = false;
+                    updateKeys(false, false, false, false, false, false, false);
+                    return;
+                }
+                Utils.hardRotate(playerYaw);
+                mc.thePlayer.rotationPitch = 11;
+                if (dy == 0) {
+                    if (!walkingForward) { //normal
+                        KeyBinding.setKeyBindState(keybindAttack, true);
+                        KeyBinding.setKeyBindState(keyBindShift, false);
+                        if (currentDirection.equals(direction.RIGHT))
+                            KeyBinding.setKeyBindState(keybindD, true);
+                        else if (currentDirection.equals(direction.LEFT))
+                            KeyBinding.setKeyBindState(keybindA, true);
+                        else
+                            walkingForward = true;
+                    } else { // walking forward
 
-                    //hole drop fix (prevent sneaking at the hole)
-                    KeyBinding.setKeyBindState(keyBindShift, !Utils.isWalkable(blockStandingOn));
+                        //hole drop fix (prevent sneaking at the hole)
+                        KeyBinding.setKeyBindState(keyBindShift, !Utils.isWalkable(blockStandingOn));
 
 
-                    //unleash keys
-                    if (lastLaneDirection.equals(direction.LEFT))
-                        updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), mc.gameSettings.keyBindLeft.isKeyDown(), false, false);
-                    else
-                        updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), false, mc.gameSettings.keyBindRight.isKeyDown(), false);
+                        //unleash keys
+                        if (lastLaneDirection.equals(direction.LEFT))
+                            updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), mc.gameSettings.keyBindLeft.isKeyDown(), false, false);
+                        else
+                            updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), false, mc.gameSettings.keyBindRight.isKeyDown(), false);
 
-                    //push keys so the next tick it will unleash
-                    while (!pushedOff && !lastLaneDirection.equals(direction.NONE)) {
-                        if (lastLaneDirection.equals(direction.LEFT)) {
-                            Utils.addCustomLog("Bouncing to the right");
-                            updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), mc.gameSettings.keyBindLeft.isKeyDown(), true, false);
-                        } else {
-                            Utils.addCustomLog("Bouncing to the left");
-                            updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), true, mc.gameSettings.keyBindRight.isKeyDown(), false);
+                        //push keys so the next tick it will unleash
+                        while (!pushedOff && !lastLaneDirection.equals(direction.NONE)) {
+                            if (lastLaneDirection.equals(direction.LEFT)) {
+                                Utils.addCustomLog("Bouncing to the right");
+                                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), mc.gameSettings.keyBindLeft.isKeyDown(), true, false);
+                            } else {
+                                Utils.addCustomLog("Bouncing to the left");
+                                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), true, mc.gameSettings.keyBindRight.isKeyDown(), false);
+                            }
+                            pushedOff = true;
                         }
-                        pushedOff = true;
+                        KeyBinding.setKeyBindState(keybindW, true);
                     }
-                    KeyBinding.setKeyBindState(keybindW, true);
-                }
-            }
-
-
-            //change to walk forward
-            if (Utils.roundTo2DecimalPlaces(dx) == 0 && Utils.roundTo2DecimalPlaces(dz) == 0) {
-                if (shouldWalkForward() && !walkingForward && ((int) initialX != (int) mc.thePlayer.posX || (int) initialZ != (int) mc.thePlayer.posZ)) {
-                   // updateKeybinds(true, false, false, false);
-                    walkingForward = true;
-                    walkForwardDis = 2.9f;
-                    Utils.addCustomLog("Walking forward, walking dis = " + walkForwardDis);
-                    pushedOff = false;
-                    initialX = mc.thePlayer.posX;
-                    initialZ = mc.thePlayer.posZ;
-                }
-            }
-
-            //chagnge back to left/right
-            if ((Math.abs(initialX - mc.thePlayer.posX) > walkForwardDis || Math.abs(initialZ - mc.thePlayer.posZ) > walkForwardDis) && walkingForward) {
-
-                mc.thePlayer.sendChatMessage("/setspawn");
-                if (!Utils.isWalkable(Utils.getLeftBlock()) || !Utils.isWalkable(Utils.getBlockAround(-2, 0))) {
-                    //set last lane dir
-                    currentDirection = direction.RIGHT;
-                    lastLaneDirection = direction.RIGHT;
-                    updateKeys(false, false, false, true, false);
-                } else if (!Utils.isWalkable(Utils.getRightBlock()) || !Utils.isWalkable(Utils.getBlockAround(2, 0))) {
-                    currentDirection = direction.LEFT;
-                    lastLaneDirection = direction.LEFT;
-                    updateKeys(false, false, true, false, false);
                 }
 
-                Utils.addCustomLog("Changing motion : Going " + currentDirection);
-                ScheduleRunnable(PressS, 200, TimeUnit.MILLISECONDS);
-                walkingForward = false;
+
+                //change to walk forward
+                if (Utils.roundTo2DecimalPlaces(dx) == 0 && Utils.roundTo2DecimalPlaces(dz) == 0) {
+                    if (shouldWalkForward() && !walkingForward && ((int) initialX != (int) mc.thePlayer.posX || (int) initialZ != (int) mc.thePlayer.posZ)) {
+                        // updateKeybinds(true, false, false, false);
+                        walkingForward = true;
+                        walkForwardDis = 2.9f;
+                        Utils.addCustomLog("Walking forward, walking dis = " + walkForwardDis);
+                        pushedOff = false;
+                        initialX = mc.thePlayer.posX;
+                        initialZ = mc.thePlayer.posZ;
+                    }
+                }
+
+                //chagnge back to left/right
+                if ((Math.abs(initialX - mc.thePlayer.posX) > walkForwardDis || Math.abs(initialZ - mc.thePlayer.posZ) > walkForwardDis) && walkingForward) {
+
+                    mc.thePlayer.sendChatMessage("/setspawn");
+                    if (!Utils.isWalkable(Utils.getLeftBlock()) || !Utils.isWalkable(Utils.getBlockAround(-2, 0))) {
+                        //set last lane dir
+                        currentDirection = direction.RIGHT;
+                        lastLaneDirection = direction.RIGHT;
+                        updateKeys(false, false, false, true, false);
+                    } else if (!Utils.isWalkable(Utils.getRightBlock()) || !Utils.isWalkable(Utils.getBlockAround(2, 0))) {
+                        currentDirection = direction.LEFT;
+                        lastLaneDirection = direction.LEFT;
+                        updateKeys(false, false, true, false, false);
+                    }
+
+                    Utils.addCustomLog("Changing motion : Going " + currentDirection);
+                    ScheduleRunnable(PressS, 200, TimeUnit.MILLISECONDS);
+                    walkingForward = false;
+                }
             }
         }
 
@@ -200,20 +215,24 @@ public class CaneBuilder {
         }
         if(Keyboard.isKeyDown(Keyboard.KEY_F)){
             if(!enabled){
-                Utils.addCustomMessage("Enabling script");
+                Utils.addCustomMessage("Enabling script (Digging trench)");
                 updateKeys(false, false, false, false, false, false, false);
                 initVar();
                 enabled = true;
                 diggingTrench = true;
+                ExecuteRunnable(initializeDig);
             } else {
                 Utils.addCustomMessage("Disabling script");
                 updateKeys(false, false, false, false, false, false, false);
                 enabled = false;
+                diggingTrench = false;
+                diggingPath = false;
+
             }
         }
         if(Keyboard.isKeyDown(Keyboard.KEY_G)){
             if(!enabled){
-                Utils.addCustomMessage("Enabling script");
+                Utils.addCustomMessage("Enabling script (Digging path");
                 updateKeys(false, false, false, false, false, false, false);
                 initVar();
                 enabled = true;
@@ -262,6 +281,50 @@ public class CaneBuilder {
 
         }
     };
+    Runnable initializeDig = new Runnable() {
+        @Override
+        public void run() {
+
+            try {
+                Utils.addCustomLog("Initialize digging");
+                updateKeys(false, false, false, false, false, false, false);
+                Utils.hardRotate(playerYaw);
+                mc.thePlayer.rotationPitch = 60;
+                KeyBinding.onTick(keybindAttack);
+                Thread.sleep(500);
+                mc.thePlayer.rotationPitch = 50;
+                KeyBinding.onTick(keybindAttack);
+                Thread.sleep(500);
+                mc.thePlayer.rotationPitch = 30;
+                KeyBinding.onTick(keybindAttack);
+                Thread.sleep(500);
+                mc.thePlayer.rotationPitch = 25;
+                KeyBinding.onTick(keybindAttack);
+                Thread.sleep(300);
+                KeyBinding.setKeyBindState(keybindAttack, true);
+                KeyBinding.setKeyBindState(keybindW, true);
+                Thread.sleep(300);
+                KeyBinding.setKeyBindState(keybindW, false);
+                inDiggingTrench = true;
+
+            }catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    Runnable SlowDig = new Runnable() {
+        @Override
+        public void run() {
+
+            try {
+                inDiggingTrench = true;
+
+            }catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
 
     direction calculateDirection() {
         ArrayList<Integer> unwalkableBlocks = new ArrayList<>();
@@ -318,6 +381,16 @@ public class CaneBuilder {
         eTemp.execute(r);
         eTemp.shutdown();
     }
+    BlockPos getBorderBlock(){
+        double X = mc.thePlayer.posX;
+        double Y = mc.thePlayer.posY;
+        double Z = mc.thePlayer.posZ;
+        for(int i = 0; i < 10; i++){
+            if(Utils.getBlockAround(0, i, 0) != Blocks.air)
+                return new BlockPos(Utils.getUnitX() * i + X, Y, Utils.getUnitZ() * i + Z);
+        }
+        return null;
+    }
 
     boolean shouldEndDigging(){
         for(int i = 5; i < 7; i++) {
@@ -333,5 +406,8 @@ public class CaneBuilder {
         walkingForward = false;
         walkForwardDis = 2.9f;
         pushedOff = false;
+        slowDig = true;
+        inDiggingTrench = false;
+        playerYaw = Math.round(Utils.get360RotationYaw() / 90) < 4 ? Math.round(Utils.get360RotationYaw() / 90) * 90 : 0;
     }
 }

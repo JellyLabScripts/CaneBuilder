@@ -37,36 +37,66 @@ public class Utils {
 
         }
     }
+    public static int getUnitX() {
+        double modYaw = (Minecraft.getMinecraft().thePlayer.rotationYaw % 360 + 360) % 360;
+        if (modYaw < 45 || modYaw > 315) {
+            return 0;
+        } else if (modYaw < 135) {
+            return -1;
+        } else if (modYaw < 225) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    public static int getUnitZ() {
+        double modYaw = (Minecraft.getMinecraft().thePlayer.rotationYaw % 360 + 360) % 360;
+        if (modYaw < 45 || modYaw > 315) {
+            return 1;
+        } else if (modYaw < 135) {
+            return 0;
+        } else if (modYaw < 225) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+    public static float get360RotationYaw() {
+        return Minecraft.getMinecraft().thePlayer.rotationYaw > 0 ?
+                (Minecraft.getMinecraft().thePlayer.rotationYaw % 360) :
+                (Minecraft.getMinecraft().thePlayer.rotationYaw < 360f ? 360 - (-Minecraft.getMinecraft().thePlayer.rotationYaw % 360) : 360 + Minecraft.getMinecraft().thePlayer.rotationYaw);
+    }
     public static Block getFrontBlock(){
         Minecraft mc = Minecraft.getMinecraft();
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().xCoord + mc.thePlayer.posX, mc.thePlayer.posY,
-                        mc.thePlayer.getLookVec().zCoord + mc.thePlayer.posZ)).getBlock());
+                new BlockPos(getUnitX() + mc.thePlayer.posX, mc.thePlayer.posY,
+                        getUnitZ() + mc.thePlayer.posZ)).getBlock());
     }
     public static Block getFrontDownBlock(){
         Minecraft mc = Minecraft.getMinecraft();
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().xCoord + mc.thePlayer.posX, mc.thePlayer.posY - 1,
-                        mc.thePlayer.getLookVec().zCoord + mc.thePlayer.posZ)).getBlock());
+                new BlockPos(getUnitX() + mc.thePlayer.posX, mc.thePlayer.posY - 1,
+                        getUnitZ() + mc.thePlayer.posZ)).getBlock());
     }
     public static Block getBackBlock(){
         Minecraft mc = Minecraft.getMinecraft();
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().xCoord * -1 + mc.thePlayer.posX, mc.thePlayer.posY,
-                        mc.thePlayer.getLookVec().zCoord * -1 + mc.thePlayer.posZ)).getBlock());
+                new BlockPos(getUnitX() * -1 + mc.thePlayer.posX, mc.thePlayer.posY,
+                        getUnitZ() * -1 + mc.thePlayer.posZ)).getBlock());
     }
     public static Block getRightBlock(){
         Minecraft mc = Minecraft.getMinecraft();
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().zCoord * -1 + mc.thePlayer.posX, mc.thePlayer.posY,
-                        mc.thePlayer.getLookVec().xCoord + mc.thePlayer.posZ)).getBlock());
+                new BlockPos(getUnitZ() * -1 + mc.thePlayer.posX, mc.thePlayer.posY,
+                        getUnitX() + mc.thePlayer.posZ)).getBlock());
     }
 
     public static Block getLeftBlock(){
         Minecraft mc = Minecraft.getMinecraft();
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().zCoord + mc.thePlayer.posX, mc.thePlayer.posY,
-                        mc.thePlayer.getLookVec().xCoord * -1 + mc.thePlayer.posZ)).getBlock());
+                new BlockPos(getUnitZ() + mc.thePlayer.posX, mc.thePlayer.posY,
+                        getUnitX() * -1 + mc.thePlayer.posZ)).getBlock());
     }
 
     public static double roundTo2DecimalPlaces(double d){
@@ -85,8 +115,8 @@ public class Utils {
         double Z = mc.thePlayer.posZ;
 
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().zCoord * -1 * rightOffset + mc.thePlayer.getLookVec().xCoord * frontOffset + X, Y,
-                        mc.thePlayer.getLookVec().xCoord * rightOffset + mc.thePlayer.getLookVec().zCoord * frontOffset + Z)).getBlock());
+                new BlockPos(getUnitZ() * -1 * rightOffset + getUnitX() * frontOffset + X, Y,
+                        getUnitX() * rightOffset + getUnitZ() * frontOffset + Z)).getBlock());
 
     }
     public static Block getBlockAround(int rightOffset, int frontOffset, int upOffset){
@@ -96,8 +126,8 @@ public class Utils {
         double Z = mc.thePlayer.posZ;
 
         return (mc.theWorld.getBlockState(
-                new BlockPos(mc.thePlayer.getLookVec().zCoord * -1 * rightOffset + mc.thePlayer.getLookVec().xCoord * frontOffset + X, Y + upOffset,
-                        mc.thePlayer.getLookVec().xCoord * rightOffset + mc.thePlayer.getLookVec().zCoord * frontOffset + Z)).getBlock());
+                new BlockPos(getUnitZ() * -1 * rightOffset + getUnitX() * frontOffset + X, Y + upOffset,
+                        getUnitX() * rightOffset + getUnitZ() * frontOffset + Z)).getBlock());
 
     }
 }
