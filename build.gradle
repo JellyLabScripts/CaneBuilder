@@ -60,6 +60,9 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
 }
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
 processResources
 {
@@ -80,3 +83,5 @@ processResources
         exclude 'mcmod.info'
     }
 }
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
