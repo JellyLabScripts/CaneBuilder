@@ -7,6 +7,8 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 
+import java.util.Random;
+
 public class Utils {
     public static void addCustomMessage(String msg){
         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
@@ -129,5 +131,49 @@ public class Utils {
                 new BlockPos(getUnitZ() * -1 * rightOffset + getUnitX() * frontOffset + X, Y + upOffset,
                         getUnitX() * rightOffset + getUnitZ() * frontOffset + Z)).getBlock());
 
+    }
+    public static void smoothRotateClockwise(final int rotationClockwise360, double speed) {
+        new Thread(() -> {
+            int targetYaw = (Math.round(get360RotationYaw()) + rotationClockwise360) % 360;
+            while (get360RotationYaw() != targetYaw) {
+                if (Math.abs(get360RotationYaw() - targetYaw) < 1f * speed) {
+                    Minecraft.getMinecraft().thePlayer.rotationYaw = Math.round(Minecraft.getMinecraft().thePlayer.rotationYaw + Math.abs(get360RotationYaw() - targetYaw));
+                    return;
+                }
+                Minecraft.getMinecraft().thePlayer.rotationYaw += (0.3f + nextInt(3) / 10.0f) * speed;
+                try {
+                    Thread.sleep(1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }).start();
+    }
+    public static void smoothRotateAnticlockwise(final int rotationAnticlockwise360, double speed) {
+        new Thread(() -> {
+            int targetYaw = Math.round(get360RotationYaw(get360RotationYaw() - rotationAnticlockwise360));
+            while (get360RotationYaw() != targetYaw) {
+                if (Math.abs(get360RotationYaw() - targetYaw) < 1f * speed) {
+                    Minecraft.getMinecraft().thePlayer.rotationYaw = Math.round(Minecraft.getMinecraft().thePlayer.rotationYaw - Math.abs(get360RotationYaw() - targetYaw));
+                    return;
+                }
+                Minecraft.getMinecraft().thePlayer.rotationYaw -= (0.3f + nextInt(3) / 10.0f) * speed;
+                try {
+                    Thread.sleep(1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+    public static int nextInt(int upperbound) {
+        Random r = new Random();
+        return r.nextInt(upperbound);
+    }
+    public static float get360RotationYaw(float yaw) {
+        return yaw > 0 ?
+                (yaw % 360) :
+                (yaw < 360f ? 360 - (-yaw % 360) : 360 + yaw);
     }
 }

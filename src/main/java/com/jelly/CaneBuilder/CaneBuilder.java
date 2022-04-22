@@ -43,6 +43,7 @@ public class CaneBuilder {
     static boolean enabled = false;
     static boolean diggingPath = false;
     static boolean diggingTrench = false;
+    static boolean goLeft = false;
 
 
     // for digging trench path
@@ -70,6 +71,7 @@ public class CaneBuilder {
     public int keybindUseItem = mc.gameSettings.keyBindUseItem.getKeyCode();
     public int keyBindSpace = mc.gameSettings.keyBindJump.getKeyCode();
     public int keyBindShift = mc.gameSettings.keyBindSneak.getKeyCode();
+    public int keyBindJump = mc.gameSettings.keyBindJump.getKeyCode();
 
 
     enum direction {
@@ -91,6 +93,7 @@ public class CaneBuilder {
         if(tickEvent.phase != TickEvent.Phase.START)
             return;
 
+
         if(mc.thePlayer != null && mc.theWorld != null && enabled){
             double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
             double dy = Math.abs(mc.thePlayer.posY - mc.thePlayer.lastTickPosY);
@@ -104,11 +107,27 @@ public class CaneBuilder {
                 return;
             }
 
+
             if(diggingTrench){
                 if(inDiggingTrench){
-                    Utils.hardRotate(playerYaw);
-                    mc.thePlayer.rotationPitch = 19;
-                    updateKeys(true, false, false, false, true, false, false);
+                    if(!slowDig) {
+                        if(getBorderBlock() != null) {
+
+                            //getting close to border
+                            if (Math.abs(getBorderBlock().getX() - mc.thePlayer.posX) < 7 && Math.abs(getBorderBlock().getZ() - mc.thePlayer.posZ) < 7) {
+                                Utils.addCustomLog("Slow digging, border block = " + getBorderBlock());
+                                slowDig = true;
+                                ExecuteRunnable(SlowDig);
+                                KeyBinding.setKeyBindState(keybindAttack, false);
+                                return;
+                            }
+                        }
+
+                        System.out.println("Digging");
+                        Utils.hardRotate(playerYaw);
+                        mc.thePlayer.rotationPitch = 19;
+                        updateKeys(true, false, false, false, true, false, false);
+                    }
                 }
             }
             if(diggingPath) {
@@ -132,10 +151,7 @@ public class CaneBuilder {
                         else
                             walkingForward = true;
                     } else { // walking forward
-
-                        //hole drop fix (prevent sneaking at the hole)
-                        KeyBinding.setKeyBindState(keyBindShift, !Utils.isWalkable(blockStandingOn));
-
+                        KeyBinding.setKeyBindState(keyBindShift, false);
 
                         //unleash keys
                         if (lastLaneDirection.equals(direction.LEFT))
@@ -306,6 +322,7 @@ public class CaneBuilder {
                 Thread.sleep(300);
                 KeyBinding.setKeyBindState(keybindW, false);
                 inDiggingTrench = true;
+                slowDig = false;
 
             }catch(Exception e) {
                 e.printStackTrace();
@@ -318,6 +335,59 @@ public class CaneBuilder {
 
             try {
                 inDiggingTrench = true;
+                KeyBinding.setKeyBindState(keybindAttack, false);
+                Utils.addCustomLog(Math.abs(getBorderBlock().getX() - mc.thePlayer.posX)  + " " + Math.abs(getBorderBlock().getZ() - mc.thePlayer.posZ));
+                Utils.addCustomLog(getBorderBlock().toString());
+                Thread.sleep(1000);
+                while(Math.abs(getBorderBlock().getX() - Math.floor(mc.thePlayer.posX)) > 2 || Math.abs(getBorderBlock().getZ() - Math.floor(mc.thePlayer.posZ)) > 2){
+                    mc.thePlayer.rotationPitch = 60;
+                    Utils.addCustomLog("Digging a block");
+                    KeyBinding.onTick(keybindAttack);
+                    Thread.sleep(1000);
+                }
+                updateKeys(true, false, false, false, false, false, false);
+                KeyBinding.setKeyBindState(keyBindJump, true);
+                Thread.sleep(200);
+                KeyBinding.setKeyBindState(keyBindJump, false);
+                Thread.sleep(200);
+                updateKeys(false, false, false, false, false, false, false);
+                Thread.sleep(500);
+
+
+                if(goLeft) {
+                    Utils.addCustomLog("Going left");
+                    Utils.smoothRotateClockwise(180, 2);
+                }
+                else {
+                    Utils.addCustomLog("Going Right");
+                    Utils.smoothRotateAnticlockwise(180, 2);
+                }
+                Thread.sleep(1000);
+                BlockPos targetBlockPos;
+                if(goLeft)
+                    targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * -2 + mc.thePlayer.posX, mc.thePlayer.posY,
+                            Utils.getUnitX() * -2 + mc.thePlayer.posZ);
+                else
+                    targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * 2 + mc.thePlayer.posX, mc.thePlayer.posY,
+                            Utils.getUnitX() * 2+  mc.thePlayer.posZ);
+                updateKeys(false, false, false, false, false, false, false);
+                while(Math.floor(mc.thePlayer.posX) != targetBlockPos.getX() || Math.floor(mc.thePlayer.posZ) != targetBlockPos.getZ()){
+                    updateKeys(false, false, goLeft, !goLeft, false);
+                }
+                // NEED ALIGNMENT
+                Thread.sleep(50);
+                Utils.addCustomLog("Starting new row");
+                goLeft = !goLeft;
+                if(playerYaw < 180)
+                    playerYaw += 180;
+                else
+                    playerYaw -= 180;
+                updateKeys(false, false, false, false, false, false, false);
+                ScheduleRunnable(initializeDig, 1, TimeUnit.SECONDS);
+
+
+
+
 
             }catch(Exception e) {
                 e.printStackTrace();
@@ -386,8 +456,10 @@ public class CaneBuilder {
         double Y = mc.thePlayer.posY;
         double Z = mc.thePlayer.posZ;
         for(int i = 0; i < 10; i++){
-            if(Utils.getBlockAround(0, i, 0) != Blocks.air)
-                return new BlockPos(Utils.getUnitX() * i + X, Y, Utils.getUnitZ() * i + Z);
+            if(Utils.getBlockAround(0, i, 0) != Blocks.air) {
+                if (Utils.getBlockAround(0, i + 1, 0) == Blocks.air)
+                    return new BlockPos(Utils.getUnitX() * i + X, Y - 1, Utils.getUnitZ() * i + Z);
+            }
         }
         return null;
     }
@@ -406,8 +478,9 @@ public class CaneBuilder {
         walkingForward = false;
         walkForwardDis = 2.9f;
         pushedOff = false;
-        slowDig = true;
+        slowDig = false;
         inDiggingTrench = false;
+        goLeft = false;
         playerYaw = Math.round(Utils.get360RotationYaw() / 90) < 4 ? Math.round(Utils.get360RotationYaw() / 90) * 90 : 0;
     }
 }
