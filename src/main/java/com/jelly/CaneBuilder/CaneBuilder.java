@@ -89,10 +89,64 @@ public class CaneBuilder {
         MinecraftForge.EVENT_BUS.register(new CaneBuilder());
     }
     @SubscribeEvent
+    public void onKeyPress(InputEvent.KeyInputEvent event){
+        /*if(Keyboard.isKeyDown(Keyboard.KEY_P)){
+            if(setmode == 0) {
+                Utils.addCustomMessage("Set 1st corner");
+                corner1x = (int)mc.thePlayer.posX;
+                corner1y = (int)mc.thePlayer.posY - 1;
+                corner1z = (int)mc.thePlayer.posZ;
+                setmode = 1 - setmode;
+            }
+            else {
+                Utils.addCustomMessage("Set 2nd corner");
+                corner2x = (int)mc.thePlayer.posX;
+                corner2y = (int)mc.thePlayer.posY - 1;
+                corner2z = (int)mc.thePlayer.posZ;
+                setmode = 1 - setmode;
+            }
+        }*/
+
+        if(Keyboard.isKeyDown(Keyboard.KEY_F)){
+            if(!enabled){
+                Utils.addCustomMessage("Enabling script (Digging trench)");
+                updateKeys(false, false, false, false, false, false, false);
+                initVar();
+                enabled = true;
+                diggingTrench = true;
+                ExecuteRunnable(InitializeDig);
+            } else {
+                Utils.addCustomMessage("Disabling script");
+                updateKeys(false, false, false, false, false, false, false);
+                enabled = false;
+                diggingTrench = false;
+                diggingPath = false;
+
+            }
+        }
+        if(Keyboard.isKeyDown(Keyboard.KEY_G)){
+            if(!enabled){
+                Utils.addCustomMessage("Enabling script (Digging path)");
+                updateKeys(false, false, false, false, false, false, false);
+                initVar();
+                enabled = true;
+                diggingPath = true;
+            }
+        }
+        if(Keyboard.isKeyDown(Keyboard.KEY_H)){
+            if(!enabled){
+                new Thread(() -> Utils.smoothRotatePitchTo(-20, 1)).start();
+
+            }
+        }
+
+    }
+    @SubscribeEvent
     public void onTickPlayer(TickEvent.ClientTickEvent tickEvent){
         if(tickEvent.phase != TickEvent.Phase.START)
             return;
 
+        System.out.println(shouldEndDiggingTrench() + " " + onRightSideOfFarm());
 
         if(mc.thePlayer != null && mc.theWorld != null && enabled){
             double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
@@ -125,8 +179,8 @@ public class CaneBuilder {
 
                         System.out.println("Digging");
                         Utils.hardRotate(playerYaw);
-                        mc.thePlayer.rotationPitch = 19;
-                        updateKeys(true, false, false, false, true, false, false);
+                        mc.thePlayer.rotationPitch = 20;
+                        updateKeys(true, false, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), true, false, false);
                     }
                 }
             }
@@ -211,67 +265,7 @@ public class CaneBuilder {
         }
 
     }
-    @SubscribeEvent
-    public void onKeyPress(InputEvent.KeyInputEvent event){
-        if(Keyboard.isKeyDown(Keyboard.KEY_P)){
-            if(setmode == 0) {
-                Utils.addCustomMessage("Set 1st corner");
-                corner1x = (int)mc.thePlayer.posX;
-                corner1y = (int)mc.thePlayer.posY - 1;
-                corner1z = (int)mc.thePlayer.posZ;
-                setmode = 1 - setmode;
-            }
-            else {
-                Utils.addCustomMessage("Set 2nd corner");
-                corner2x = (int)mc.thePlayer.posX;
-                corner2y = (int)mc.thePlayer.posY - 1;
-                corner2z = (int)mc.thePlayer.posZ;
-                setmode = 1 - setmode;
-            }
-        }
-        if(Keyboard.isKeyDown(Keyboard.KEY_F)){
-            if(!enabled){
-                Utils.addCustomMessage("Enabling script (Digging trench)");
-                updateKeys(false, false, false, false, false, false, false);
-                initVar();
-                enabled = true;
-                diggingTrench = true;
-                ExecuteRunnable(initializeDig);
-            } else {
-                Utils.addCustomMessage("Disabling script");
-                updateKeys(false, false, false, false, false, false, false);
-                enabled = false;
-                diggingTrench = false;
-                diggingPath = false;
 
-            }
-        }
-        if(Keyboard.isKeyDown(Keyboard.KEY_G)){
-            if(!enabled){
-                Utils.addCustomMessage("Enabling script (Digging path");
-                updateKeys(false, false, false, false, false, false, false);
-                initVar();
-                enabled = true;
-                diggingPath = true;
-            }
-        }
-    }
-    void updateKeys(boolean wBool, boolean sBool, boolean aBool, boolean dBool, boolean atkBool,  boolean useBool, boolean shiftBool) {
-        KeyBinding.setKeyBindState(keybindW, wBool);
-        KeyBinding.setKeyBindState(keybindS, sBool);
-        KeyBinding.setKeyBindState(keybindA, aBool);
-        KeyBinding.setKeyBindState(keybindD, dBool);
-        KeyBinding.setKeyBindState(keybindAttack, atkBool);
-        KeyBinding.setKeyBindState(keybindUseItem, useBool);
-        KeyBinding.setKeyBindState(keyBindShift, shiftBool);
-    }
-    void updateKeys(boolean wBool, boolean sBool, boolean aBool, boolean dBool, boolean atkBool) {
-        KeyBinding.setKeyBindState(keybindW, wBool);
-        KeyBinding.setKeyBindState(keybindS, sBool);
-        KeyBinding.setKeyBindState(keybindA, aBool);
-        KeyBinding.setKeyBindState(keybindD, dBool);
-        KeyBinding.setKeyBindState(keybindAttack, atkBool);
-    }
 
     Runnable PressS = new Runnable() {
         @Override
@@ -297,53 +291,93 @@ public class CaneBuilder {
 
         }
     };
-    Runnable initializeDig = new Runnable() {
+
+    Runnable InitializeDig = new Runnable() {
         @Override
         public void run() {
-
             try {
                 Utils.addCustomLog("Initialize digging");
                 updateKeys(false, false, false, false, false, false, false);
                 Utils.hardRotate(playerYaw);
-                mc.thePlayer.rotationPitch = 60;
+                Utils.smoothRotatePitchTo(60, 1);
                 KeyBinding.onTick(keybindAttack);
                 Thread.sleep(500);
-                mc.thePlayer.rotationPitch = 50;
+                Utils.smoothRotatePitchTo(50, 1);
                 KeyBinding.onTick(keybindAttack);
                 Thread.sleep(500);
-                mc.thePlayer.rotationPitch = 30;
+                Utils.smoothRotatePitchTo(30, 1);
                 KeyBinding.onTick(keybindAttack);
                 Thread.sleep(500);
-                mc.thePlayer.rotationPitch = 25;
+                Utils.smoothRotatePitchTo(25, 1);
                 KeyBinding.onTick(keybindAttack);
                 Thread.sleep(300);
                 KeyBinding.setKeyBindState(keybindAttack, true);
                 KeyBinding.setKeyBindState(keybindW, true);
                 Thread.sleep(300);
+                Utils.smoothRotatePitchTo(20, 1);
                 KeyBinding.setKeyBindState(keybindW, false);
+
                 inDiggingTrench = true;
                 slowDig = false;
+                ScheduleRunnable(AlignInTrench, 1, TimeUnit.SECONDS);
+
 
             }catch(Exception e) {
                 e.printStackTrace();
             }
         }
     };
+    Runnable AlignInTrench = () -> {
+        try {
+            if (goLeft) {
+                Utils.addCustomLog("Pressing A, trying to align");
+                KeyBinding.setKeyBindState(keybindA, true);
+                Thread.sleep(100);
+                KeyBinding.setKeyBindState(keybindA, false);
+            } else {
+                Utils.addCustomLog("Pressing D, trying to align");
+                KeyBinding.setKeyBindState(keybindD, true);
+                Thread.sleep(100);
+                KeyBinding.setKeyBindState(keybindD, false);
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    };
     Runnable SlowDig = new Runnable() {
         @Override
         public void run() {
-
+            if(!enabled)
+                return;
             try {
                 inDiggingTrench = true;
                 KeyBinding.setKeyBindState(keybindAttack, false);
                 Utils.addCustomLog(Math.abs(getBorderBlock().getX() - mc.thePlayer.posX)  + " " + Math.abs(getBorderBlock().getZ() - mc.thePlayer.posZ));
                 Utils.addCustomLog(getBorderBlock().toString());
                 Thread.sleep(1000);
-                while(Math.abs(getBorderBlock().getX() - Math.floor(mc.thePlayer.posX)) > 2 || Math.abs(getBorderBlock().getZ() - Math.floor(mc.thePlayer.posZ)) > 2){
+                while((Math.abs(getBorderBlock().getX() - Math.floor(mc.thePlayer.posX)) > 2 || Math.abs(getBorderBlock().getZ() - Math.floor(mc.thePlayer.posZ)) > 2) && enabled){
                     mc.thePlayer.rotationPitch = 60;
                     Utils.addCustomLog("Digging a block");
                     KeyBinding.onTick(keybindAttack);
                     Thread.sleep(1000);
+                }
+                ExecuteRunnable(goToNextTrench);
+            }catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    Runnable goToNextTrench = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if(!enabled)
+                    return;
+                if(shouldEndDiggingTrench()){
+                    Utils.addCustomLog("Dig trench completed");
+                    enabled = false;
+                    updateKeys(false, false, false, false, false, false, false);
+                    return;
                 }
                 updateKeys(true, false, false, false, false, false, false);
                 KeyBinding.setKeyBindState(keyBindJump, true);
@@ -353,47 +387,49 @@ public class CaneBuilder {
                 updateKeys(false, false, false, false, false, false, false);
                 Thread.sleep(500);
 
-
-                if(goLeft) {
+                if (goLeft)
                     Utils.addCustomLog("Going left");
-                    Utils.smoothRotateClockwise(180, 2);
-                }
-                else {
+                else
                     Utils.addCustomLog("Going Right");
+
+                if (mc.thePlayer.rotationYaw < 180)
+                    Utils.smoothRotateClockwise(180, 2);
+                else
                     Utils.smoothRotateAnticlockwise(180, 2);
-                }
                 Thread.sleep(1000);
                 BlockPos targetBlockPos;
-                if(goLeft)
-                    targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * -2 + mc.thePlayer.posX, mc.thePlayer.posY,
+                if (goLeft)
+                    targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * -3 + mc.thePlayer.posX, mc.thePlayer.posY,
                             Utils.getUnitX() * -2 + mc.thePlayer.posZ);
                 else
-                    targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * 2 + mc.thePlayer.posX, mc.thePlayer.posY,
-                            Utils.getUnitX() * 2+  mc.thePlayer.posZ);
+                    targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * 3 + mc.thePlayer.posX, mc.thePlayer.posY,
+                            Utils.getUnitX() * 3 + mc.thePlayer.posZ);
                 updateKeys(false, false, false, false, false, false, false);
-                while(Math.floor(mc.thePlayer.posX) != targetBlockPos.getX() || Math.floor(mc.thePlayer.posZ) != targetBlockPos.getZ()){
-                    updateKeys(false, false, goLeft, !goLeft, false);
+                while ((Math.floor(mc.thePlayer.posX) != targetBlockPos.getX() || Math.floor(mc.thePlayer.posZ) != targetBlockPos.getZ()) && enabled) {
+                    updateKeys(false, false, goLeft, !goLeft, false, false, true);
                 }
-                // NEED ALIGNMENT
                 Thread.sleep(50);
+                updateKeys(false, false, false, false, false, false, true);
+                // NEED ALIGNMENT
+                // Utils.align();
+                Thread.sleep(500);
                 Utils.addCustomLog("Starting new row");
                 goLeft = !goLeft;
-                if(playerYaw < 180)
+
+                if (playerYaw < 180)
                     playerYaw += 180;
                 else
                     playerYaw -= 180;
                 updateKeys(false, false, false, false, false, false, false);
-                ScheduleRunnable(initializeDig, 1, TimeUnit.SECONDS);
-
-
-
-
-
-            }catch(Exception e) {
+                ScheduleRunnable(InitializeDig, 1, TimeUnit.SECONDS);
+            } catch(Exception e){
                 e.printStackTrace();
             }
+
         }
     };
+
+
 
 
     direction calculateDirection() {
@@ -472,7 +508,36 @@ public class CaneBuilder {
         return false;
 
     }
+    boolean shouldEndDiggingTrench(){
+        if(onRightSideOfFarm()) {
+            if(Utils.getBlockAround(-3, 0, 0).equals(Blocks.air) && !Utils.getBlockAround(-4, 0, 0).equals(Blocks.air)) {
+                for (int i = 0; i < 5; i++) {
+                    if (Utils.getBlockAround(i, 0, -1).equals(Blocks.air))
+                        return true;
+                }
+            }
+        } else {
+            System.out.println(Utils.getBlockAround(-3, 0, 0));
+            if(Utils.getBlockAround(3, 0, 0).equals(Blocks.air) && !Utils.getBlockAround(4, 0, 0).equals(Blocks.air)) {
+                for (int i = 0; i > -5; i--) {
+                    if (Utils.getBlockAround(i, 0, -1).equals(Blocks.air))
+                        return true;
+                }
+            }
+        }
+        return false;
+
+    }
+    boolean onRightSideOfFarm(){
+        for (int i = 0; i < 10; i++) {
+            if (Utils.isWalkable(Utils.getBlockAround(i, 0, -1))) {
+                return true;
+            }
+        }
+        return false;
+    }
     void initVar(){
+
         currentDirection = calculateDirection();
         lastLaneDirection = calculateDirection();
         walkingForward = false;
@@ -480,7 +545,30 @@ public class CaneBuilder {
         pushedOff = false;
         slowDig = false;
         inDiggingTrench = false;
-        goLeft = false;
+        if(onRightSideOfFarm())
+            goLeft = false;
+        else
+            goLeft = true;
         playerYaw = Math.round(Utils.get360RotationYaw() / 90) < 4 ? Math.round(Utils.get360RotationYaw() / 90) * 90 : 0;
     }
+
+
+    public void updateKeys(boolean wBool, boolean sBool, boolean aBool, boolean dBool, boolean atkBool,  boolean useBool, boolean shiftBool) {
+        KeyBinding.setKeyBindState(keybindW, wBool);
+        KeyBinding.setKeyBindState(keybindS, sBool);
+        KeyBinding.setKeyBindState(keybindA, aBool);
+        KeyBinding.setKeyBindState(keybindD, dBool);
+        KeyBinding.setKeyBindState(keybindAttack, atkBool);
+        KeyBinding.setKeyBindState(keybindUseItem, useBool);
+        KeyBinding.setKeyBindState(keyBindShift, shiftBool);
+    }
+    void updateKeys(boolean wBool, boolean sBool, boolean aBool, boolean dBool, boolean atkBool) {
+        KeyBinding.setKeyBindState(keybindW, wBool);
+        KeyBinding.setKeyBindState(keybindS, sBool);
+        KeyBinding.setKeyBindState(keybindA, aBool);
+        KeyBinding.setKeyBindState(keybindD, dBool);
+        KeyBinding.setKeyBindState(keybindAttack, atkBool);
+    }
+
 }
+
