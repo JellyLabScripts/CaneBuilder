@@ -146,8 +146,6 @@ public class CaneBuilder {
         if(tickEvent.phase != TickEvent.Phase.START)
             return;
 
-        System.out.println(shouldEndDiggingTrench() + " " + onRightSideOfFarm());
-
         if(mc.thePlayer != null && mc.theWorld != null && enabled){
             double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
             double dy = Math.abs(mc.thePlayer.posY - mc.thePlayer.lastTickPosY);
