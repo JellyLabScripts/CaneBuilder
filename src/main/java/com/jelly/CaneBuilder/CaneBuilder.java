@@ -8,7 +8,9 @@ import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.ContainerChest;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -45,7 +47,6 @@ public class CaneBuilder {
     static boolean diggingTrench = false;
     static boolean goLeft = false;
 
-
     // for digging trench path
     static boolean slowDig;
     static boolean inDiggingTrench;
@@ -55,6 +56,13 @@ public class CaneBuilder {
     static double initialZ = 0;
     static float walkForwardDis;
     static boolean pushedOff;
+    //for placing sugarcane
+    static boolean placingSc;
+    static boolean refillingSc;
+    static boolean canePlaceLag;
+    static boolean fixLag;
+    //autoclicker
+    static long initialTime = 0;
 
 
     /*
@@ -116,12 +124,7 @@ public class CaneBuilder {
                 diggingTrench = true;
                 ExecuteRunnable(InitializeDig);
             } else {
-                Utils.addCustomMessage("Disabling script");
-                updateKeys(false, false, false, false, false, false, false);
-                enabled = false;
-                diggingTrench = false;
-                diggingPath = false;
-
+                disableScript();
             }
         }
         if(Keyboard.isKeyDown(Keyboard.KEY_G)){
@@ -135,9 +138,13 @@ public class CaneBuilder {
         }
         if(Keyboard.isKeyDown(Keyboard.KEY_H)){
             if(!enabled){
-                new Thread(() -> Utils.smoothRotatePitchTo(-20, 1)).start();
-
+                Utils.addCustomMessage("Enabling script (Placing sugarcane)");
+                updateKeys(false, false, false, false, false, false, false);
+                initVar();
+                enabled = true;
+                placingSc = true;
             }
+
         }
 
     }
@@ -154,9 +161,11 @@ public class CaneBuilder {
 
             mc.gameSettings.gammaSetting = 100;
             Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
-            if (mc.currentScreen instanceof GuiInventory || mc.currentScreen instanceof GuiChat || mc.currentScreen instanceof GuiIngameMenu) {
-                updateKeys(false, false, false, false, false, false, false);
-                return;
+            if(!placingSc) {
+                if (mc.currentScreen instanceof GuiInventory || mc.currentScreen instanceof GuiChat || mc.currentScreen instanceof GuiIngameMenu) {
+                    updateKeys(false, false, false, false, false, false, false);
+                    return;
+                }
             }
 
 
@@ -183,10 +192,11 @@ public class CaneBuilder {
                 }
             }
             if(diggingPath) {
+
                 if(shouldEndDigging() && !(!Utils.isWalkable(Utils.getRightBlock()) && !Utils.isWalkable(Utils.getRightBlock()))){
                     walkingForward = false;
                     Utils.addCustomMessage("Ended process");
-                    enabled = false;
+                    disableScript();
                     updateKeys(false, false, false, false, false, false, false);
                     return;
                 }
@@ -203,22 +213,24 @@ public class CaneBuilder {
                         else
                             walkingForward = true;
                     } else { // walking forward
-                        KeyBinding.setKeyBindState(keyBindShift, false);
+                        KeyBinding.setKeyBindState(keyBindShift, true);
+                        KeyBinding.setKeyBindState(keybindAttack, false);
+
 
                         //unleash keys
                         if (lastLaneDirection.equals(direction.LEFT))
-                            updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), mc.gameSettings.keyBindLeft.isKeyDown(), false, false);
+                            KeyBinding.setKeyBindState(keybindD, false);
                         else
-                            updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), false, mc.gameSettings.keyBindRight.isKeyDown(), false);
+                            KeyBinding.setKeyBindState(keybindA, false);
 
                         //push keys so the next tick it will unleash
                         while (!pushedOff && !lastLaneDirection.equals(direction.NONE)) {
                             if (lastLaneDirection.equals(direction.LEFT)) {
                                 Utils.addCustomLog("Bouncing to the right");
-                                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), mc.gameSettings.keyBindLeft.isKeyDown(), true, false);
+                                KeyBinding.setKeyBindState(keybindD, true);
                             } else {
                                 Utils.addCustomLog("Bouncing to the left");
-                                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), mc.gameSettings.keyBindBack.isKeyDown(), true, mc.gameSettings.keyBindRight.isKeyDown(), false);
+                                KeyBinding.setKeyBindState(keybindA, true);
                             }
                             pushedOff = true;
                         }
@@ -260,6 +272,109 @@ public class CaneBuilder {
                     walkingForward = false;
                 }
             }
+            if(placingSc){
+
+                if(!refillingSc) {
+                    if (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
+                        refillingSc = true;
+                        updateKeys(false, false, false, false, false, false, false);
+                        ExecuteRunnable(RefillSc);
+                        return;
+                    }
+                    if (shouldEndDigging() && !(!Utils.isWalkable(Utils.getRightBlock()) && !Utils.isWalkable(Utils.getRightBlock()))) {
+                        walkingForward = false;
+                        Utils.addCustomMessage("Ended placing sugarcane");
+                        disableScript();
+                        updateKeys(false, false, false, false, false, false, false);
+                        return;
+                    }
+
+                    Utils.hardRotate(playerYaw);
+                    mc.thePlayer.rotationPitch = 46;
+                    mc.thePlayer.inventory.currentItem = Utils.getFirstHotbarSlotWithSugarcane() - 36;
+
+
+                    if (dy == 0) {
+                        if (!walkingForward) { //normal
+
+                            if(initialTime == 0 || TimeUnit.MILLISECONDS.convert(System.nanoTime() - initialTime, TimeUnit.NANOSECONDS) > 70 + Utils.nextInt(20)){
+                                KeyBinding.onTick(keybindUseItem);
+                                initialTime = System.nanoTime();
+                            }
+                            if(!canePlaceLag) {
+                                canePlaceLag = blockLagged(currentDirection);
+                                if(canePlaceLag) {
+                                    Utils.addCustomLog("Detected lag");
+                                    ScheduleRunnable(ResumePlacing, 1, TimeUnit.SECONDS);
+                                }
+                            }
+                            if(canePlaceLag){
+                                initialX = mc.thePlayer.posX;
+                                initialZ = mc.thePlayer.posZ;
+                            }
+
+                            KeyBinding.setKeyBindState(keyBindShift, false);
+                            if (currentDirection.equals(direction.RIGHT)) {
+                                KeyBinding.setKeyBindState(keybindD, !canePlaceLag);
+                                KeyBinding.setKeyBindState(keybindA, canePlaceLag);
+
+                            }
+                            else if (currentDirection.equals(direction.LEFT)) {
+                                KeyBinding.setKeyBindState(keybindA, !canePlaceLag);
+                                KeyBinding.setKeyBindState(keybindD, canePlaceLag);
+                            }
+                            else
+                                walkingForward = true;
+
+
+                        } else { // walking forward
+                            KeyBinding.setKeyBindState(keyBindShift, false);
+                            //unleash keys
+                            if (lastLaneDirection.equals(direction.LEFT))
+                                KeyBinding.setKeyBindState(keybindD, false);
+                            else
+                                KeyBinding.setKeyBindState(keybindA, false);
+                            KeyBinding.setKeyBindState(keybindW, true);
+                        }
+                    }
+
+
+                    //change to walk forward
+                    if (Utils.roundTo2DecimalPlaces(dx) == 0 && Utils.roundTo2DecimalPlaces(dz) == 0) {
+                        if (shouldWalkForward() && !walkingForward && ((int) initialX != (int) mc.thePlayer.posX || (int) initialZ != (int) mc.thePlayer.posZ)) {
+                            // updateKeybinds(true, false, false, false);
+                            walkingForward = true;
+                            walkForwardDis = 2.9f;
+                            Utils.addCustomLog("Walking forward, walking dis = " + walkForwardDis);
+                            pushedOff = false;
+                            initialX = mc.thePlayer.posX;
+                            initialZ = mc.thePlayer.posZ;
+                        }
+                    }
+
+                    //chagnge back to left/right
+                    if ((Math.abs(initialX - mc.thePlayer.posX) > walkForwardDis || Math.abs(initialZ - mc.thePlayer.posZ) > walkForwardDis) && walkingForward) {
+
+                        mc.thePlayer.sendChatMessage("/setspawn");
+                        if (!Utils.isWalkable(Utils.getLeftBlock()) || !Utils.isWalkable(Utils.getBlockAround(-2, 0))) {
+                            //set last lane dir
+                            currentDirection = direction.RIGHT;
+                            lastLaneDirection = direction.RIGHT;
+                            updateKeys(false, false, false, true, false);
+                        } else if (!Utils.isWalkable(Utils.getRightBlock()) || !Utils.isWalkable(Utils.getBlockAround(2, 0))) {
+                            currentDirection = direction.LEFT;
+                            lastLaneDirection = direction.LEFT;
+                            updateKeys(false, false, true, false, false);
+                        }
+
+                        Utils.addCustomLog("Changing motion : Going " + currentDirection);
+                        ScheduleRunnable(PressS, 200, TimeUnit.MILLISECONDS);
+                        walkingForward = false;
+                    }
+                } else {
+                    updateKeys(false, false, false, false, false, false, false);
+                }
+            }
         }
 
     }
@@ -274,14 +389,12 @@ public class CaneBuilder {
             try {
                 do {
                     Utils.addCustomLog("Pressing S");
-                    updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), true, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), true);
-                    Thread.sleep(50);
+                    updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), true, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), false);
+                    Thread.sleep(150);
                 }
                 while (Utils.isWalkable(Utils.getBackBlock()) && (!Utils.isWalkable(Utils.getFrontBlock()) || !Utils.isWalkable(Utils.getBlockAround(0, 2))));
 
-                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), false, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), true);
-
-
+                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), false, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), false);
             } catch (Exception e) {
                 e.printStackTrace();
 
@@ -294,6 +407,8 @@ public class CaneBuilder {
         @Override
         public void run() {
             try {
+                if(!enabled)
+                    return;
                 Utils.addCustomLog("Initialize digging");
                 updateKeys(false, false, false, false, false, false, false);
                 Utils.hardRotate(playerYaw);
@@ -309,15 +424,25 @@ public class CaneBuilder {
                 Utils.smoothRotatePitchTo(25, 1);
                 KeyBinding.onTick(keybindAttack);
                 Thread.sleep(300);
-                KeyBinding.setKeyBindState(keybindAttack, true);
                 KeyBinding.setKeyBindState(keybindW, true);
-                Thread.sleep(300);
-                Utils.smoothRotatePitchTo(20, 1);
+                Thread.sleep(200);
                 KeyBinding.setKeyBindState(keybindW, false);
+                Thread.sleep(100);
+                Utils.addCustomLog("Pressing S");
+                KeyBinding.setKeyBindState(keybindS, true);
+                Thread.sleep(300);
+                KeyBinding.setKeyBindState(keybindS, false);
+                Thread.sleep(300);
 
-                inDiggingTrench = true;
-                slowDig = false;
-                ScheduleRunnable(AlignInTrench, 1, TimeUnit.SECONDS);
+                if(!Utils.isWalkable(Utils.getRightBlock()) && !Utils.isWalkable(Utils.getLeftBlock())) {
+                    inDiggingTrench = true;
+                    slowDig = false;
+                    ScheduleRunnable(AlignInTrench, 1, TimeUnit.SECONDS);
+                }
+                else {
+                    disableScript();
+                    Utils.addCustomLog("Wrong location. Script disabled");
+                }
 
 
             }catch(Exception e) {
@@ -350,8 +475,6 @@ public class CaneBuilder {
             try {
                 inDiggingTrench = true;
                 KeyBinding.setKeyBindState(keybindAttack, false);
-                Utils.addCustomLog(Math.abs(getBorderBlock().getX() - mc.thePlayer.posX)  + " " + Math.abs(getBorderBlock().getZ() - mc.thePlayer.posZ));
-                Utils.addCustomLog(getBorderBlock().toString());
                 Thread.sleep(1000);
                 while((Math.abs(getBorderBlock().getX() - Math.floor(mc.thePlayer.posX)) > 2 || Math.abs(getBorderBlock().getZ() - Math.floor(mc.thePlayer.posZ)) > 2) && enabled){
                     mc.thePlayer.rotationPitch = 60;
@@ -359,13 +482,13 @@ public class CaneBuilder {
                     KeyBinding.onTick(keybindAttack);
                     Thread.sleep(1000);
                 }
-                ExecuteRunnable(goToNextTrench);
+                ExecuteRunnable(GoToNextTrench);
             }catch(Exception e) {
                 e.printStackTrace();
             }
         }
     };
-    Runnable goToNextTrench = new Runnable() {
+    Runnable GoToNextTrench = new Runnable() {
         @Override
         public void run() {
             try {
@@ -373,7 +496,7 @@ public class CaneBuilder {
                     return;
                 if(shouldEndDiggingTrench()){
                     Utils.addCustomLog("Dig trench completed");
-                    enabled = false;
+                    disableScript();
                     updateKeys(false, false, false, false, false, false, false);
                     return;
                 }
@@ -398,13 +521,15 @@ public class CaneBuilder {
                 BlockPos targetBlockPos;
                 if (goLeft)
                     targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * -3 + mc.thePlayer.posX, mc.thePlayer.posY,
-                            Utils.getUnitX() * -2 + mc.thePlayer.posZ);
+                            Utils.getUnitX() * -3 + mc.thePlayer.posZ);
                 else
                     targetBlockPos = new BlockPos(Utils.getUnitZ() * -1 * 3 + mc.thePlayer.posX, mc.thePlayer.posY,
                             Utils.getUnitX() * 3 + mc.thePlayer.posZ);
                 updateKeys(false, false, false, false, false, false, false);
+                Utils.addCustomLog("target block : " + targetBlockPos);
                 while ((Math.floor(mc.thePlayer.posX) != targetBlockPos.getX() || Math.floor(mc.thePlayer.posZ) != targetBlockPos.getZ()) && enabled) {
                     updateKeys(false, false, goLeft, !goLeft, false, false, true);
+                    Thread.sleep(1);
                 }
                 Thread.sleep(50);
                 updateKeys(false, false, false, false, false, false, true);
@@ -419,7 +544,86 @@ public class CaneBuilder {
                 else
                     playerYaw -= 180;
                 updateKeys(false, false, false, false, false, false, false);
+
                 ScheduleRunnable(InitializeDig, 1, TimeUnit.SECONDS);
+
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+
+        }
+    };
+    Runnable ResumePlacing = () -> canePlaceLag = false;
+
+    Runnable RefillSc = new Runnable() {
+        @Override
+        public void run() {
+
+            try {
+                updateKeys(false, false, false, false, false, false, false);
+                if (!Utils.hasSugarcaneInInv()) {
+                    ExecuteRunnable(BuySugarcane);
+                } else if (!Utils.hasSugarcaneInHotbar()) {
+                    ExecuteRunnable(PutScToHotbar);
+                } else {
+                    Utils.addCustomLog("Unknown case, disabling script");
+                    disableScript();
+                }
+            } catch(Exception e){
+
+            }
+        }
+    };
+    Runnable PutScToHotbar = new Runnable() {
+        @Override
+        public void run() {
+
+            try {
+                Utils.addCustomLog("Preparing to move sugarcane to hotbar");
+                Thread.sleep(1000);
+                mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                Thread.sleep(1000);
+
+                while(!Utils.isHotbarFull() && Utils.hasSugarcaneInMainInv()){
+                    clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithSugarcane(), 0, 1);
+                    Thread.sleep(500);
+                }
+                mc.thePlayer.closeScreen();
+                refillingSc = false;
+                Utils.addCustomLog("Finished moving sugarcane to hotbar");
+
+            } catch(Exception e){
+            }
+        }
+    };
+    Runnable BuySugarcane = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if(!enabled) return;
+
+                Utils.addCustomLog("Buying sugarcane from bazaar");
+                mc.thePlayer.sendChatMessage("/bz");
+                Thread.sleep(1000);
+                if((mc.thePlayer.openContainer instanceof ContainerChest)){
+                    clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
+                    Thread.sleep(1000);
+                    clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
+                    Thread.sleep(1000);
+                    clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
+                    Thread.sleep(1000);
+                    clickWindow(mc.thePlayer.openContainer.windowId, 14, 0, 0);
+                    Thread.sleep(1000);
+                    mc.thePlayer.closeScreen();
+                    Thread.sleep(500);
+                    refillingSc = false;
+                    Utils.addCustomLog("Finished buying sugarcane from bazaar");
+
+                } else {
+                    Utils.addCustomLog("Didn't open bazaar. Disabling script");
+                    disableScript();
+                }
+
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -526,6 +730,42 @@ public class CaneBuilder {
         return false;
 
     }
+    boolean blockLagged(direction playerGoingDir){
+        if(playerGoingDir == direction.RIGHT) {
+            return !(sugarcaneIsPresent(-3, 1)) || !(sugarcaneIsPresent(-3, 0)) ||
+                    !(sugarcaneIsPresent(-2, 1)) || !(sugarcaneIsPresent(-2, 1));
+        } else {
+            return !(sugarcaneIsPresent(3, 1)) || !(sugarcaneIsPresent(3, 0)) ||
+                    !(sugarcaneIsPresent(2, 1)) || !(sugarcaneIsPresent(2, 0));
+
+           /* if(isWaterBlock(3, 2, -1)){
+                if(isSugarcaneBlock(3, 1, 0)){
+                    if(isWaterBlock(2, 2, -1)){
+                        if(isSugarcaneBlock(2, 1, 0))
+                            return false;
+                        else return true;
+                    }
+                } else return true;
+
+            } else if(isWaterBlock(2, 2, -1)){
+                if(isSugarcaneBlock(2, 1, 0))
+                    return false;
+                else return true;
+            }*/
+        }
+    }
+    boolean sugarcaneIsPresent(int rightOffset, int frontOffset){
+        if(isWaterBlock(rightOffset, frontOffset + 1, -1) || isWaterBlock(rightOffset, frontOffset - 1, -1)){
+            return isSugarcaneBlock(rightOffset, frontOffset, 0);
+        }
+        return true;
+    }
+    boolean isSugarcaneBlock(int rightOffset, int frontOffset, int upOffset){
+        return Utils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.reeds);
+    }
+    boolean isWaterBlock(int rightOffset, int frontOffset, int upOffset){
+        return Utils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.water) || Utils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.flowing_water);
+    }
     boolean onRightSideOfFarm(){
         for (int i = 0; i < 10; i++) {
             if (Utils.isWalkable(Utils.getBlockAround(i, 0, -1))) {
@@ -540,9 +780,13 @@ public class CaneBuilder {
         lastLaneDirection = calculateDirection();
         walkingForward = false;
         walkForwardDis = 2.9f;
+        initialX = mc.thePlayer.posX;
+        initialZ = mc.thePlayer.posZ;
         pushedOff = false;
         slowDig = false;
         inDiggingTrench = false;
+        canePlaceLag = false;
+        fixLag = false;
         if(onRightSideOfFarm())
             goLeft = false;
         else
@@ -567,6 +811,30 @@ public class CaneBuilder {
         KeyBinding.setKeyBindState(keybindD, dBool);
         KeyBinding.setKeyBindState(keybindAttack, atkBool);
     }
+    void clickWindow(int windowID, int slotID, int mouseButtonClicked, int mode) throws Exception{
+
+        if(mc.thePlayer.openContainer instanceof ContainerChest || mc.currentScreen instanceof  GuiInventory) {
+            mc.playerController.windowClick(windowID, slotID, mouseButtonClicked, mode, mc.thePlayer);
+            Utils.addCustomLog("Pressing slot : " + slotID);
+        }
+        else {
+            Utils.addCustomMessage(EnumChatFormatting.RED + "Didn't open window! This shouldn't happen and the script has been disabled. Please immediately report to the developer.");
+            updateKeys(false, false, false, false, false, false, false);
+            disableScript();
+            throw new Exception();
+
+        }
+    }
+    void disableScript(){
+        enabled = false;
+        diggingTrench = false;
+        diggingPath = false;
+        placingSc = false;
+        refillingSc = false;
+        Utils.addCustomMessage("Disabling script");
+        updateKeys(false, false, false, false, false, false, false);
+    }
+
 
 }
 
