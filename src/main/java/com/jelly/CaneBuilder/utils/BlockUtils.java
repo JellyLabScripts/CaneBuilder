@@ -74,10 +74,6 @@ public class BlockUtils {
     public static Block getLeftBlock(){
         return getBlockAround(-1, 0, 0);
     }
-    public static boolean isInCenterOfBlock(){
-        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ?Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
-                Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
 
-    }
 
 }

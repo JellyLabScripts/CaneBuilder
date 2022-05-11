@@ -121,13 +121,13 @@ public class AngleUtils extends Utils{
                 (-yaw % 360 > 180 ? (180 - (-yaw % 360 - 180)) : -(-yaw % 360));
     }
 
-    public static void hardRotate(float yaw) {
-        while (get360RotationYaw() != yaw) {
-            if (Math.abs(get360RotationYaw() - yaw) < 0.2f) {
-                mc.thePlayer.rotationYaw = yaw;
+    public static void hardRotate(float yaw360) {
+        while (get360RotationYaw() != yaw360) {
+            if (Math.abs(get360RotationYaw() - yaw360) < 0.2f) {
+                mc.thePlayer.rotationYaw = yaw360;
                 return;
             }
-            if (shouldRotateClockwise(get360RotationYaw(), yaw)) {
+            if (shouldRotateClockwise(get360RotationYaw(), yaw360)) {
                 mc.thePlayer.rotationYaw += 0.1f;
             } else {
                 mc.thePlayer.rotationYaw -= 0.1f;
