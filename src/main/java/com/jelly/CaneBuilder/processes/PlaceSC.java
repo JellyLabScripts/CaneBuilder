@@ -159,6 +159,11 @@ public class PlaceSC extends ProcessModule{
         walkingForward = false;
         initialX = 10000;
         initialZ = 10000;
+
+        if(!(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock()))) {
+            initialX = mc.thePlayer.posX;
+            initialZ = mc.thePlayer.posZ;
+        }
         pushedOff = false;
         canePlaceLag = false;
         refillingSc = false;
@@ -304,6 +309,8 @@ public class PlaceSC extends ProcessModule{
     }
     boolean sugarcaneIsPresent(int rightOffset, int frontOffset){
         if(isWaterBlock(rightOffset, frontOffset + 1, -1) || isWaterBlock(rightOffset, frontOffset - 1, -1)){
+            if(!isWaterBlock(rightOffset, frontOffset + 2, -1))
+                return true;
             return isSugarcaneBlock(rightOffset, frontOffset, 0);
         }
         return true;
@@ -316,6 +323,8 @@ public class PlaceSC extends ProcessModule{
     }
     boolean shouldWalkForward() {
         return (BlockUtils.isWalkable(BlockUtils.getBackBlock()) && BlockUtils.isWalkable(BlockUtils.getFrontBlock())) ||
+                (!BlockUtils.isWalkable(BlockUtils.getBackBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) ||
+                (!BlockUtils.isWalkable(BlockUtils.getBackBlock()) && !BlockUtils.isWalkable(BlockUtils.getRightBlock())) ||
                 (!BlockUtils.isWalkable(BlockUtils.getFrontBlock()) && !BlockUtils.isWalkable(BlockUtils.getRightBlock())) ||
                 (!BlockUtils.isWalkable(BlockUtils.getFrontBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) ||
                 (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock()));
