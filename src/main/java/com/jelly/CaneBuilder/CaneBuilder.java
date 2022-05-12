@@ -156,6 +156,7 @@ public class CaneBuilder {
                     Utils.addCustomMessage("Set the corners");
                 } else {
                     if ((int) mc.thePlayer.posX == corner1x && (int) mc.thePlayer.posZ == corner1z) {
+                        ungrabMouse();
                         for(ProcessModule process : processes){
                             if(process instanceof PlaceDirt1) {
                                 process.toggle();
