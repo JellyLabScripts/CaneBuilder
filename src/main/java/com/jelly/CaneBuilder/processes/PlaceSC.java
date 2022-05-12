@@ -4,7 +4,7 @@ import com.jelly.CaneBuilder.CaneBuilder;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
 import com.jelly.CaneBuilder.utils.Utils;
-import net.minecraft.block.Block;
+
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
@@ -20,7 +20,6 @@ public class PlaceSC extends ProcessModule{
     boolean walkingForward;
     double initialX = 0;
     double initialZ = 0;
-    float walkForwardDis;
     boolean pushedOff;
     public BlockPos targetBlockPos= new BlockPos(10000, 10000, 10000);
     boolean refillingSc;
@@ -32,36 +31,42 @@ public class PlaceSC extends ProcessModule{
 
     @Override
     public void onTick(){
-        if(AOTEing)
+        if(AOTEing) {
+            resetKeybindState();
             return;
+        }
         double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
         double dy = Math.abs(mc.thePlayer.posY - mc.thePlayer.lastTickPosY);
         double dz = Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ);
 
+        BlockPos blockInPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+
         if(!refillingSc) {
-            if (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
-                refillingSc = true;
-                updateKeys(false, false, false, false, false, false, false);
-                ExecuteRunnable(RefillSc);
-                return;
-            }
-            if (shouldEndDigging() && !(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getRightBlock()))) {
+            if(((!BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 1, 0)) && !BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, 0))) ||
+                    (!BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 1, 0)) && !BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, 0))))){
                 walkingForward = false;
                 Utils.addCustomMessage("Ended placing sugarcane");
                 CaneBuilder.switchToNextProcess(this);
                 updateKeys(false, false, false, false, false, false, false);
                 return;
             }
+            if (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
+                refillingSc = true;
+                updateKeys(false, false, false, false, false, false, false);
+                ExecuteRunnable(RefillSc);
+                return;
+            }
+
 
             AngleUtils.hardRotate(playerYaw);
-            mc.thePlayer.rotationPitch = 46;
+            mc.thePlayer.rotationPitch = 50;
             mc.thePlayer.inventory.currentItem = Utils.getFirstHotbarSlotWithSugarcane() - 36;
-
 
             if (dy == 0) {
                 if (!walkingForward) { //normal
 
                     setKeyBindState(keybindUseItem, true);
+                    setKeyBindState(keybindW, false);
                     if(!canePlaceLag) {
                         canePlaceLag = blockLagged(currentDirection);
                         if(canePlaceLag) {
@@ -102,12 +107,12 @@ public class PlaceSC extends ProcessModule{
 
             //change to walk forward
             if (Utils.roundTo2DecimalPlaces(dx) == 0 && Utils.roundTo2DecimalPlaces(dz) == 0) {
-                if (shouldWalkForward() && !walkingForward && ((int) initialX != (int) mc.thePlayer.posX || (int) initialZ != (int) mc.thePlayer.posZ)) {
+                if (shouldWalkForward() && !walkingForward && ((int) initialX != (int) mc.thePlayer.posX || (int) initialZ != (int) mc.thePlayer.posZ)) { // &&
                     setKeyBindState(keybindUseItem, false);
                     // updateKeybinds(true, false, false, false);
                     walkingForward = true;
-                    walkForwardDis = 2.9f;
-                    Utils.addCustomLog("Walking forward, walking dis = " + walkForwardDis);
+                    targetBlockPos = calculateTargetBlockPos();
+                    Utils.addCustomLog("Target block : " + targetBlockPos.toString());
                     pushedOff = false;
                     initialX = mc.thePlayer.posX;
                     initialZ = mc.thePlayer.posZ;
@@ -115,24 +120,32 @@ public class PlaceSC extends ProcessModule{
             }
 
             //chagnge back to left/right
-            if ((Math.abs(initialX - mc.thePlayer.posX) > walkForwardDis || Math.abs(initialZ - mc.thePlayer.posZ) > walkForwardDis) && walkingForward) {
+            if (blockInPos.getX() == targetBlockPos.getX() && blockInPos.getZ() == targetBlockPos.getZ() && walkingForward) {
 
-                setKeyBindState(keybindUseItem, false);
-                mc.thePlayer.sendChatMessage("/setspawn");
-                if (!BlockUtils.isWalkable(BlockUtils.getLeftBlock()) || !BlockUtils.isWalkable(BlockUtils.getBlockAround(-2, 0))) {
-                    //set last lane dir
-                    currentDirection = direction.RIGHT;
-                    lastLaneDirection = direction.RIGHT;
-                    updateKeys(false, false, false, true, false);
-                } else if (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getBlockAround(2, 0))) {
-                    currentDirection = direction.LEFT;
-                    lastLaneDirection = direction.LEFT;
-                    updateKeys(false, false, true, false, false);
-                }
+                new Thread(() -> {
+                    AOTEing = true;
+                    AOTE();
+                    setKeyBindState(keybindUseItem, false);
+                    mc.thePlayer.sendChatMessage("/setspawn");
+                    if (!BlockUtils.isWalkable(BlockUtils.getLeftBlock()) || !BlockUtils.isWalkable(BlockUtils.getBlockAround(-2, 0))) {
+                        //set last lane dir
+                        currentDirection = direction.RIGHT;
+                        lastLaneDirection = direction.RIGHT;
+                        updateKeys(false, false, false, true, false);
+                    } else if (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getBlockAround(2, 0))) {
+                        currentDirection = direction.LEFT;
+                        lastLaneDirection = direction.LEFT;
+                        updateKeys(false, false, true, false, false);
+                    }
 
-                Utils.addCustomLog("Changing motion : Going " + currentDirection);
-                ScheduleRunnable(PressS, 200, TimeUnit.MILLISECONDS);
-                walkingForward = false;
+                    initialX = mc.thePlayer.posX;
+                    initialZ = mc.thePlayer.posZ;
+                    Utils.addCustomLog("Changing motion : Going " + currentDirection);
+                  ///  ScheduleRunnable(PressS, 200, TimeUnit.MILLISECONDS);
+                    walkingForward = false;
+                    AOTEing = false;
+                }).start();
+
             }
         } else {
             updateKeys(false, false, false, false, false, false, false);
@@ -144,9 +157,8 @@ public class PlaceSC extends ProcessModule{
     public void onEnable(){
         AOTEing = true;
         walkingForward = false;
-        walkForwardDis = 2.9f;
-        initialX = mc.thePlayer.posX;
-        initialZ = mc.thePlayer.posZ;
+        initialX = 10000;
+        initialZ = 10000;
         pushedOff = false;
         canePlaceLag = false;
         refillingSc = false;
@@ -188,11 +200,9 @@ public class PlaceSC extends ProcessModule{
                 threadSleep(500);
                 clickWindow(mc.thePlayer.openContainer.windowId, 42, 0, 1);
                 threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 43, 0, 1);
-                threadSleep(500);
                 mc.thePlayer.closeScreen();
                 threadSleep(500);
-                AngleUtils.smoothRotatePitchTo(11, 1.2f);
+                AngleUtils.smoothRotatePitchTo(50, 1.2f);
                 threadSleep(500);
                 currentDirection = calculateDirection();
                 lastLaneDirection = calculateDirection();
@@ -207,28 +217,6 @@ public class PlaceSC extends ProcessModule{
 
     Runnable ResumePlacing = () -> canePlaceLag = false;
 
-    Runnable PressS = new Runnable() {
-        @Override
-        public void run() {
-
-            if (walkingForward)
-                return;
-            try {
-                do {
-                    Utils.addCustomLog("Pressing S");
-                    updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), true, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), false);
-                    Thread.sleep(150);
-                }
-                while (BlockUtils.isWalkable(BlockUtils.getBackBlock()) && (!BlockUtils.isWalkable(BlockUtils.getFrontBlock()) || !BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 2))));
-
-                updateKeys(mc.gameSettings.keyBindForward.isKeyDown(), false, mc.gameSettings.keyBindLeft.isKeyDown(), mc.gameSettings.keyBindRight.isKeyDown(), false);
-            } catch (Exception e) {
-                e.printStackTrace();
-
-            }
-
-        }
-    };
     Runnable RefillSc = new Runnable() {
         @Override
         public void run() {
@@ -305,21 +293,6 @@ public class PlaceSC extends ProcessModule{
         }
     };
 
-    BlockPos getBorderBlock(){
-        double X = mc.thePlayer.posX;
-        double Y = mc.thePlayer.posY;
-        double Z = mc.thePlayer.posZ;
-        for(int i = 0; i < 10; i++){
-            if(BlockUtils.getBlockAround(0, i, 0) != Blocks.air) {
-                if (BlockUtils.getBlockAround(0, i + 1, 0) == Blocks.air)
-                    return new BlockPos(BlockUtils.getUnitX() * i + X, Y - 1, BlockUtils.getUnitZ() * i + Z);
-            }
-        }
-        return null;
-    }
-
-
-
     boolean blockLagged(direction playerGoingDir){
         if(playerGoingDir == direction.RIGHT) {
             return !(sugarcaneIsPresent(-3, 1)) || !(sugarcaneIsPresent(-3, 0)) ||
@@ -341,26 +314,8 @@ public class PlaceSC extends ProcessModule{
     boolean isWaterBlock(int rightOffset, int frontOffset, int upOffset){
         return BlockUtils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.water) || BlockUtils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.flowing_water);
     }
-    boolean onRightSideOfFarm(){
-        for (int i = 0; i < 10; i++) {
-            if (BlockUtils.isWalkable(BlockUtils.getBlockAround(i, 0, -1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-    boolean shouldEndDigging(){
-        for(int i = 5; i < 7; i++) {
-            if(BlockUtils.getBlockAround(0, i, -1).equals(Blocks.air))
-                return true;
-        }
-        return false;
-
-    }
     boolean shouldWalkForward() {
         return (BlockUtils.isWalkable(BlockUtils.getBackBlock()) && BlockUtils.isWalkable(BlockUtils.getFrontBlock())) ||
-                (!BlockUtils.isWalkable(BlockUtils.getBackBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) ||
-                (!BlockUtils.isWalkable(BlockUtils.getBackBlock()) && !BlockUtils.isWalkable(BlockUtils.getRightBlock())) ||
                 (!BlockUtils.isWalkable(BlockUtils.getFrontBlock()) && !BlockUtils.isWalkable(BlockUtils.getRightBlock())) ||
                 (!BlockUtils.isWalkable(BlockUtils.getFrontBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) ||
                 (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock()));
@@ -395,25 +350,32 @@ public class PlaceSC extends ProcessModule{
 
         if (unwalkableBlocks.size() == 0)
             return direction.RIGHT;
-        else if (unwalkableBlocks.size() > 1 && hasPosAndNeg(unwalkableBlocks)) {
-            return direction.NONE;
-        } else if (unwalkableBlocks.get(0) > 0)
+        else if (unwalkableBlocks.get(0) > 0)
             return direction.LEFT;
         else
             return direction.RIGHT;
     }
 
 
-    boolean hasPosAndNeg(ArrayList<Integer> ar) {
-        boolean hasPos = false;
-        boolean hasNeg = false;
-        for (Integer integer : ar) {
-            if (integer < 0)
-                hasNeg = true;
-            else
-                hasPos = true;
+    BlockPos calculateTargetBlockPos(){
+
+        if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getLeftBlock())){
+            if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())){
+                for(int i = 0; i < 5; i++){
+                    if(!(!BlockUtils.isWalkable(BlockUtils.getBlockAround(1, i, 0)) && !BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, i, 0))))
+                        return BlockUtils.getBlockPosAround(0, i, 0);
+                }
+
+            } else {
+                return BlockUtils.getBlockPosAround(0, 3, 0);
+
+
+            }
         }
-        return hasPos && hasNeg;
+
+        Utils.addCustomLog("can't calculate target block!");
+        return new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+
 
     }
 }

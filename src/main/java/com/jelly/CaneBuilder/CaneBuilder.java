@@ -357,25 +357,13 @@ public class CaneBuilder {
 
 
 
-
-
-
     void ScheduleRunnable(Runnable r, int delay, TimeUnit tu) {
         ScheduledExecutorService eTemp = Executors.newScheduledThreadPool(1);
         eTemp.schedule(r, delay, tu);
         eTemp.shutdown();
     }
 
-    void ExecuteRunnable(Runnable r) {
-        ScheduledExecutorService eTemp = Executors.newScheduledThreadPool(1);
-        eTemp.execute(r);
-        eTemp.shutdown();
-    }
-
     void initVar(){
-
-
-
         slowDig = false;
         inDiggingTrench = false;
         inFailsafe = false;

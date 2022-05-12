@@ -42,7 +42,6 @@ public class FillTrench extends ProcessModule{
                     return;
                 if(shouldEndPlacingWater()){
                     resetKeybindState();
-                    threadSleep(500);
                     Utils.addCustomLog("Place water completed");
                     CaneBuilder.switchToNextProcess(FillTrench.this);
                     return;
@@ -83,7 +82,6 @@ public class FillTrench extends ProcessModule{
                  return;
             if(shouldEndPlacingWater()){
                 resetKeybindState();
-                threadSleep(500);
                 Utils.addCustomLog("Place water completed");
                 CaneBuilder.switchToNextProcess(FillTrench.this);
                 return;
@@ -105,12 +103,12 @@ public class FillTrench extends ProcessModule{
             AngleUtils.smoothRotatePitchTo(70, 1.2f);
             Thread.sleep(1000);
             setKeyBindState(keybindAttack, true);
-            Thread.sleep(300);
+            while(!BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1)))
+                threadSleep(1);
             setKeyBindState(keybindAttack, false);
             mc.thePlayer.inventory.currentItem = 3;
             if(shouldEndPlacingWater()){
                 resetKeybindState();
-                threadSleep(500);
                 Utils.addCustomLog("Place water completed");
                 CaneBuilder.switchToNextProcess(FillTrench.this);
                 return;
