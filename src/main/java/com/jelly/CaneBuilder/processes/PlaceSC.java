@@ -14,7 +14,6 @@ import net.minecraft.util.EnumChatFormatting;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-
 public class PlaceSC extends ProcessModule{
     boolean AOTEing = false;
     boolean walkingForward;

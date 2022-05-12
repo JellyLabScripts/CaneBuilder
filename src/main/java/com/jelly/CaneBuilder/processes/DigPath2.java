@@ -12,6 +12,7 @@ import scala.collection.immutable.ListSet;
 
 import java.util.ArrayList;
 
+
 public class DigPath2 extends ProcessModule{
     boolean walkingForward;
     double initialX = 0;

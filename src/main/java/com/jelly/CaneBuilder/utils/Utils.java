@@ -11,6 +11,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MouseHelper;
+import org.lwjgl.input.Mouse;
 
 import java.util.Random;
 
@@ -25,6 +27,9 @@ public class Utils {
     protected static int keybindUseItem = mc.gameSettings.keyBindUseItem.getKeyCode();
     protected static int keyBindShift = mc.gameSettings.keyBindSneak.getKeyCode();
     protected static int keyBindJump = mc.gameSettings.keyBindJump.getKeyCode();
+    public static boolean isUngrabbed = false;
+    protected static boolean doesGameWantUngrabbed;
+    protected static MouseHelper oldMouseHelper;
 
     public static void addCustomMessage(String msg){
         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
@@ -120,6 +125,8 @@ public class Utils {
         return 0;
 
     }
+
+
     public static int getFirstHotbarSlotWithSugarcane() {
         for(int  i = 36; i < 45; i++) {
             if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
@@ -230,4 +237,37 @@ public class Utils {
             e.printStackTrace();
         }
     }
+    public static void ungrabMouse() {
+        Minecraft m = Minecraft.getMinecraft();
+        if (isUngrabbed) return;
+        m.gameSettings.pauseOnLostFocus = false;
+        if (oldMouseHelper == null) oldMouseHelper = m.mouseHelper;
+        doesGameWantUngrabbed = !Mouse.isGrabbed();
+        oldMouseHelper.ungrabMouseCursor();
+        m.inGameHasFocus = true;
+        m.mouseHelper = new MouseHelper() {
+            @Override
+            public void mouseXYChange() {
+            }
+            @Override
+            public void grabMouseCursor() {
+                doesGameWantUngrabbed = false;
+            }
+            @Override
+            public void ungrabMouseCursor() {
+                doesGameWantUngrabbed = true;
+            }
+        };
+        isUngrabbed = true;
+    }
+
+    public static void regrabMouse() {
+        if (!isUngrabbed) return;
+        Minecraft m = Minecraft.getMinecraft();
+        m.mouseHelper = oldMouseHelper;
+        if (!doesGameWantUngrabbed) m.mouseHelper.grabMouseCursor();
+        oldMouseHelper = null;
+        isUngrabbed = false;
+    }
+
 }
