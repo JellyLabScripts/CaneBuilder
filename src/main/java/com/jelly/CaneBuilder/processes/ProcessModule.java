@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+
 public class ProcessModule {
     public Minecraft mc = Minecraft.getMinecraft();
     public boolean enabled;
@@ -28,10 +29,8 @@ public class ProcessModule {
     public void onTick(){
     }
     public void onEnable(){
-
     }
     public void onDisable(){
-
     }
     public boolean isEnabled(){
         return enabled;
