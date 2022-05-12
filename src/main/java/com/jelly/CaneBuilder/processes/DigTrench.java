@@ -12,6 +12,7 @@ import scala.tools.nsc.Global;
 
 import java.util.concurrent.TimeUnit;
 
+
 public class DigTrench extends ProcessModule{
 
     boolean inDiggingTrench = false;
