@@ -247,7 +247,10 @@ public class PlaceSC extends ProcessModule{
             try {
                 Utils.addCustomLog("Preparing to move sugarcane to hotbar");
                 Thread.sleep(1000);
-                mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                if(mc.currentScreen == null)
+                    mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                else
+                    return;
                 Thread.sleep(1000);
 
                 while(!Utils.isHotbarFull() && Utils.hasSugarcaneInMainInv()){
