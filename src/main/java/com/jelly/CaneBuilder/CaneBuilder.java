@@ -34,8 +34,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.jelly.CaneBuilder.utils.Utils.regrabMouse;
-import static com.jelly.CaneBuilder.utils.Utils.ungrabMouse;
+//import static com.jelly.CaneBuilder.utils.Utils.regrabMouse;
+//import static com.jelly.CaneBuilder.utils.Utils.ungrabMouse;
 
 @Mod(modid = CaneBuilder.MODID, version = CaneBuilder.VERSION)
 public class CaneBuilder {
@@ -156,7 +156,7 @@ public class CaneBuilder {
                     Utils.addCustomMessage("Set the corners");
                 } else {
                     if ((int) mc.thePlayer.posX == corner1x && (int) mc.thePlayer.posZ == corner1z) {
-                        ungrabMouse();
+                       // ungrabMouse();
                         for(ProcessModule process : processes){
                             if(process instanceof PlaceDirt1) {
                                 process.toggle();
@@ -172,7 +172,7 @@ public class CaneBuilder {
         if(customKeyBinds[2].isKeyDown()){
             if(!enabled){
                 Utils.addCustomMessage("Enabling script (Digging trench)");
-                ungrabMouse();
+              //  ungrabMouse();
                 for(ProcessModule process : processes){
                     if(process instanceof DigTrench) {
                         process.toggle();
@@ -185,7 +185,7 @@ public class CaneBuilder {
         if(customKeyBinds[3].isKeyDown()){
             if(!enabled){
                 Utils.addCustomMessage("Enabling script (Filling trench)");
-                ungrabMouse();
+               // ungrabMouse();
                 for(ProcessModule process : processes){
                     if(process instanceof FillTrench) {
                         process.toggle();
@@ -198,7 +198,7 @@ public class CaneBuilder {
         if(customKeyBinds[4].isKeyDown()){
             if(!enabled){
                 Utils.addCustomMessage("Enabling script (Digging path)");
-                ungrabMouse();
+            //    ungrabMouse();
                 for(ProcessModule process : processes){
                     if(process instanceof DigPath2) {
                         process.toggle();
@@ -211,7 +211,7 @@ public class CaneBuilder {
         if(customKeyBinds[5].isKeyDown()){
             if(!enabled){
                 Utils.addCustomMessage("Enabling script (Placing sugarcane)");
-                ungrabMouse();
+             //   ungrabMouse();
                 for(ProcessModule process : processes){
                     if(process instanceof PlaceSC) {
                         process.toggle();
@@ -402,7 +402,7 @@ public class CaneBuilder {
         enabled = false;
         diggingTrench = false;
         diggingPath = false;
-        regrabMouse();
+      //  regrabMouse();
         Utils.addCustomMessage("Disabling script");
         updateKeys(false, false, false, false, false, false, false);
         for(ProcessModule process : processes){

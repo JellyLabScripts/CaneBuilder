@@ -237,7 +237,7 @@ public class Utils {
             e.printStackTrace();
         }
     }
-    public static void ungrabMouse() {
+   /* public static void ungrabMouse() {
         Minecraft m = Minecraft.getMinecraft();
         if (isUngrabbed) return;
         m.gameSettings.pauseOnLostFocus = false;
@@ -268,6 +268,6 @@ public class Utils {
         if (!doesGameWantUngrabbed) m.mouseHelper.grabMouseCursor();
         oldMouseHelper = null;
         isUngrabbed = false;
-    }
+    }*/
 
 }
