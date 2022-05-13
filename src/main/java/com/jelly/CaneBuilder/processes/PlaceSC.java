@@ -15,7 +15,7 @@ import net.minecraft.util.EnumChatFormatting;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 public class PlaceSC extends ProcessModule{
-    boolean AOTEing = false;
+    boolean AOTEing = true;
     boolean walkingForward;
     double initialX = 0;
     double initialZ = 0;
@@ -64,6 +64,7 @@ public class PlaceSC extends ProcessModule{
             if (dy == 0) {
                 if (!walkingForward) { //normal
 
+                    setKeyBindState(keyBindShift, false);
                     setKeyBindState(keybindUseItem, true);
                     setKeyBindState(keybindW, false);
                     if(!canePlaceLag) {
@@ -77,8 +78,6 @@ public class PlaceSC extends ProcessModule{
                         initialX = mc.thePlayer.posX;
                         initialZ = mc.thePlayer.posZ;
                     }
-
-                    setKeyBindState(keyBindShift, false);
                     if (currentDirection.equals(direction.RIGHT)) {
                         setKeyBindState(keybindD, !canePlaceLag);
                         setKeyBindState(keybindA, canePlaceLag);
@@ -93,7 +92,7 @@ public class PlaceSC extends ProcessModule{
 
 
                 } else { // walking forward
-                    setKeyBindState(keyBindShift, false);
+                    setKeyBindState(keyBindShift, true);
                     //unleash keys
                     if (lastLaneDirection.equals(direction.LEFT))
                         setKeyBindState(keybindD, false);
