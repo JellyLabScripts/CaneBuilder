@@ -45,16 +45,23 @@ public class FillTrench extends ProcessModule {
             return;
         }
 
+        if (done) {
+            resetKeybindState();
+            if (wait.passed()) {
+                Utils.addCustomLog("Fill trench completed");
+                CaneBuilder.switchToNextProcess(this);
+            }
+            return;
+        }
+
         if ((BlockUtils.getUnitX() != 0 && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) ||
           BlockUtils.getUnitZ() != 0 && Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX()) {
             resetKeybindState();
             if (!done) {
                 done = true;
                 wait.schedule(3000);
-            } else if (wait.passed()) {
-                Utils.addCustomLog("Fill trench completed");
-                CaneBuilder.switchToNextProcess(this);
             }
+            return;
         }
 
         switch (currentState) {

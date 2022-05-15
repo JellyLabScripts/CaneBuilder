@@ -51,6 +51,7 @@ public class PlaceSC extends ProcessModule {
                 rotation.easeTo(AngleUtils.get360RotationYaw(), pitch, 500);
                 mc.thePlayer.inventory.currentItem = 2;
                 setKeyBindState(keybindUseItem, false);
+
             }
             return;
         }
