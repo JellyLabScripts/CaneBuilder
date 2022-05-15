@@ -1,150 +1,144 @@
 package com.jelly.CaneBuilder.processes;
 
+import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.CaneBuilder;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
+import com.jelly.CaneBuilder.utils.Clock;
 import com.jelly.CaneBuilder.utils.Utils;
-import net.minecraft.client.settings.KeyBinding;
+import static com.jelly.CaneBuilder.KeyBindHelper.*;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
 
-import java.util.concurrent.TimeUnit;
+public class FillTrench extends ProcessModule {
+    enum State {
+        START,
+        PLACE_PUMP,
+        PLACE_WATER,
+        BREAK_PUMP,
+        WALK_NEXT
+    }
 
-
-public class FillTrench extends ProcessModule{
-
-    boolean goLeft = false;
-    int playerYaw = 0;
+    boolean aote;
+    float pitch;
+    State currentState;
+    Clock jumpCooldown = new Clock();
+    boolean done = false;
+    Clock wait = new Clock();
 
     @Override
     public void onTick() {
-    }
-    @Override
-    public void onEnable(){
-        new Thread(() -> {
-            playerYaw = Math.round(AngleUtils.get360RotationYaw() / 90) < 4 ? Math.round(AngleUtils.get360RotationYaw() / 90) * 90 : 0;
-            AOTE();
-            ExecuteRunnable(placePrismapumpAndWater);
-            goLeft = onRightSideOfFarm();
-        }).start();
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
+        }
 
-    }
-    @Override
-    public void onDisable(){
-        goLeft = false;
-        playerYaw = 0;
-    }
+        if (aote) {
+            resetKeybindState();
+            setKeyBindState(keybindUseItem, true);
+            if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
+                aote = false;
+                rotation.reset();
+                rotation.easeTo(AngleUtils.get360RotationYaw(), pitch, 500);
+                mc.thePlayer.inventory.currentItem = 3;
+                setKeyBindState(keybindUseItem, false);
+            }
+            return;
+        }
 
-    Runnable goToNextWaterTrench = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                if(!enabled)
-                    return;
-                if(shouldEndPlacingWater()){
+        if ((BlockUtils.getUnitX() != 0 && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) ||
+          BlockUtils.getUnitZ() != 0 && Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX()) {
+            resetKeybindState();
+            if (!done) {
+                done = true;
+                wait.schedule(3000);
+            } else if (wait.passed()) {
+                Utils.addCustomLog("Fill trench completed");
+                CaneBuilder.switchToNextProcess(this);
+            }
+        }
+
+        switch (currentState) {
+            case START:
+                if (BlockUtils.getBlockAround(1, 0, -1).equals(Blocks.air)) {
+                    updateKeys(false, false, true, false, false, false, true);
+                } else if (BlockUtils.getBlockAround(-1, 0, -1).equals(Blocks.air)) {
+                    updateKeys(false, false, false, true, false, false, true);
+                } else if (BlockUtils.getBlockAround(0, -1, -1).equals(Blocks.air)) {
+                    updateKeys(true, false, false, false, false, false, true);
+                } else {
+                    currentState = State.WALK_NEXT;
+                }
+                return;
+
+            case PLACE_PUMP:
+                if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air)) {
+                    mc.thePlayer.inventory.currentItem = 3;
+                    onTick(keybindUseItem);
+                } else if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.prismarine)) {
                     resetKeybindState();
-                    Utils.addCustomLog("Place water completed");
-                    CaneBuilder.switchToNextProcess(FillTrench.this);
-                    return;
+                    rotation.easeTo(AngleUtils.getClosest() - 13, 42, 500);
+                    mc.thePlayer.inventory.currentItem = 4;
+                    currentState = State.PLACE_WATER;
+                } else {
+                    Utils.addCustomMessage("Placed wrong block possibly, stuck - end script");
                 }
+                return;
 
-                BlockPos targetBlockPos;
-                if (goLeft)
-                    targetBlockPos = new BlockPos(BlockUtils.getUnitZ() * -1 * -3 + mc.thePlayer.posX, mc.thePlayer.posY,
-                            BlockUtils.getUnitX() * -3 + mc.thePlayer.posZ);
-                else
-                    targetBlockPos = new BlockPos(BlockUtils.getUnitZ() * -1 * 3 + mc.thePlayer.posX, mc.thePlayer.posY,
-                            BlockUtils.getUnitX() * 3 + mc.thePlayer.posZ);
-                resetKeybindState();
-                Utils.addCustomLog("target block : " + targetBlockPos);
-                while ((Math.floor(mc.thePlayer.posX) != targetBlockPos.getX() || Math.floor(mc.thePlayer.posZ) != targetBlockPos.getZ()) && enabled || !Utils.isInCenterOfBlockSideways()) {
-                    setKeyBindState(keyBindShift, true);
-                    setKeyBindState(keybindA, goLeft);
-                    setKeyBindState(keybindD, !goLeft);
-                    Thread.sleep(1);
+            case PLACE_WATER:
+                if (BlockUtils.getBlockAround(0, 3, -1).equals(Blocks.water)) {
+                    resetKeybindState();
+                    rotation.easeTo(AngleUtils.getClosest(), 70, 500);
+                    mc.thePlayer.inventory.currentItem = 5;
+                    currentState = State.BREAK_PUMP;
+                } else {
+                    mc.thePlayer.inventory.currentItem = 4;
+                    onTick(keybindUseItem);
                 }
-
-                resetKeybindState();
-                Thread.sleep(50);
-                KeyBinding.setKeyBindState(keyBindShift, true);
-                AOTE();
-                ExecuteRunnable(placePrismapumpAndWater);
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-    };
-
-    Runnable placePrismapumpAndWater = () -> {
-        try {
-
-            if(!enabled)
-                 return;
-            if(shouldEndPlacingWater()){
-                resetKeybindState();
-                Utils.addCustomLog("Place water completed");
-                CaneBuilder.switchToNextProcess(FillTrench.this);
                 return;
-            }
 
-            mc.thePlayer.inventory.currentItem = 3;
-            AngleUtils.hardRotate(playerYaw);
-            AngleUtils.smoothRotatePitchTo(70, 1.2f);
-            onTick(keybindUseItem);
-            Thread.sleep(500);
-            mc.thePlayer.inventory.currentItem = 4;
-            AngleUtils.smoothRotateTo(playerYaw + (goLeft? -13 : 13 ), 1.2f);
-            AngleUtils.smoothRotatePitchTo(42, 1.2f);
-            Thread.sleep(1000);
-            onTick(keybindUseItem);
-            Thread.sleep(500);
-            mc.thePlayer.inventory.currentItem = 5;
-            AngleUtils.hardRotate(playerYaw);
-            AngleUtils.smoothRotatePitchTo(70, 1.2f);
-            Thread.sleep(1000);
-            setKeyBindState(keybindAttack, true);
-            while(!BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1)))
-                threadSleep(1);
-            setKeyBindState(keybindAttack, false);
-            mc.thePlayer.inventory.currentItem = 3;
-            if(shouldEndPlacingWater()){
-                resetKeybindState();
-                Utils.addCustomLog("Place water completed");
-                CaneBuilder.switchToNextProcess(FillTrench.this);
+            case BREAK_PUMP:
+                if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.prismarine)) {
+                    mc.thePlayer.inventory.currentItem = 5;
+                    setKeyBindState(keybindAttack, true);
+                } else if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.water) || BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.flowing_water)) {
+                    resetKeybindState();
+                    mc.thePlayer.inventory.currentItem = 4;
+                    currentState = State.WALK_NEXT;
+                } else {
+                    resetKeybindState();
+                    Utils.addCustomMessage("Waiting for water to flow backwards");
+                }
                 return;
-            }
-            ExecuteRunnable(goToNextWaterTrench);
 
-
-        }catch (Exception e){
-            e.printStackTrace();
+            case WALK_NEXT:
+                double rightVector = BlockUtils.getUnitX() * -1 * (BuilderState.corner2.getZ() - mc.thePlayer.posZ) + BlockUtils.getUnitZ() * -1 * (mc.thePlayer.posX - BuilderState.corner2.getX());
+                if ((BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air) || BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.prismarine)) &&
+                  BlockUtils.getBlockAround((rightVector > 0 ? -1 : 1), 1, -1).equals(Blocks.dirt) &&
+                  BlockUtils.getBlockAround((rightVector > 0 ? 1 : -1), 1, -1).equals(Blocks.dirt)) {
+                    // Reached next row to dig
+                    currentState = State.PLACE_PUMP;
+                    rotation.easeTo(AngleUtils.get360RotationYaw(), 89, 500);
+                    mc.thePlayer.inventory.currentItem = 6;
+                    resetKeybindState();
+                    aote = true;
+                    pitch = mc.thePlayer.rotationPitch;
+                } else {
+                    updateKeys(false, false, rightVector < 0, rightVector > 0, false, false, true);
+                }
         }
-    };
-    boolean onRightSideOfFarm(){
-        for (int i = 0; i < 10; i++) {
-            if (BlockUtils.isWalkable(BlockUtils.getBlockAround(i, -1, -1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-    boolean shouldEndPlacingWater(){
-        if(onRightSideOfFarm()) {
-            Utils.addCustomLog(BlockUtils.getBlockAround(-3, 1, -1).toString() + " " + "On Right side of farm");
-            if((BlockUtils.getBlockAround(-3, 1, -1).equals(Blocks.water) || BlockUtils.getBlockAround(-3, 1, -1).equals(Blocks.flowing_water))
-                    && !BlockUtils.isWalkable(BlockUtils.getBlockAround(-4, 1, -1))) {
-                return BlockUtils.getBlockAround(3, 1, -1).equals(Blocks.air) && BlockUtils.getBlockAround(2, 1, -1).equals(Blocks.air) && BlockUtils.getBlockAround(4, 1, -1).equals(Blocks.air);
-            }
-        } else {
-            Utils.addCustomLog(BlockUtils.getBlockAround(3, 1, -1).toString() + " " + "On left side of farm");
-            if((BlockUtils.getBlockAround(3, 1, -1).equals(Blocks.water) || BlockUtils.getBlockAround(3, 1, -1).equals(Blocks.flowing_water))
-                    && !BlockUtils.isWalkable(BlockUtils.getBlockAround(4, 1, -1))) {
-                return BlockUtils.getBlockAround(-3, 1, -1).equals(Blocks.air) && BlockUtils.getBlockAround(-4, 1, -1).equals(Blocks.air) && BlockUtils.getBlockAround(-2, 1, -1).equals(Blocks.air);
-            }
-        }
-        return false;
-
     }
 
+    @Override
+    public void onEnable() {
+        resetKeybindState();
+        done = false;
+        currentState = State.START;
+        aote = false;
+        rotation.easeTo(AngleUtils.getClosest(), 70, 1000);
+    }
+
+    @Override
+    public void onDisable() {
+
+    }
 }

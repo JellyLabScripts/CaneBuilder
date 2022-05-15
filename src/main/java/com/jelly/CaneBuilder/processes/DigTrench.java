@@ -1,272 +1,171 @@
 package com.jelly.CaneBuilder.processes;
 
+import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.CaneBuilder;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
+import com.jelly.CaneBuilder.utils.Clock;
 import com.jelly.CaneBuilder.utils.Utils;
-import net.minecraft.block.Block;
+import static com.jelly.CaneBuilder.KeyBindHelper.*;
+
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import scala.tools.nsc.Global;
 
-import java.util.concurrent.TimeUnit;
+public class DigTrench extends ProcessModule {
+    enum State {
+        START,
+        DROP_DIG,
+        FULL_DIG,
+        JUMP_OUT,
+        WALK_NEXT
+    }
 
-
-public class DigTrench extends ProcessModule{
-
-    boolean inDiggingTrench = false;
-    boolean slowDig = false;
-    boolean goLeft = false;
-    int playerYaw = 0;
+    boolean aote;
+    float pitch;
+    State currentState;
+    Clock jumpCooldown = new Clock();
 
     @Override
     public void onTick() {
-        if(inDiggingTrench){
-            if(!slowDig) {
-                if(getBorderBlock() != null) {
-
-                    //getting close to border
-                    if (Math.abs(getBorderBlock().getX() - mc.thePlayer.posX) < 7 && Math.abs(getBorderBlock().getZ() - mc.thePlayer.posZ) < 7) {
-                        Utils.addCustomLog("Slow digging, border block = " + getBorderBlock());
-                        slowDig = true;
-                        ExecuteRunnable(SlowDig);
-                        setKeyBindState(keybindAttack, false);
-                        return;
-                    }
-                }
-                AngleUtils.hardRotate(playerYaw);
-                mc.thePlayer.rotationPitch = 20;
-                setKeyBindState(keybindW, true);
-                setKeyBindState(keybindAttack, true);
-            }
-        }
-
-    }
-    @Override
-    public void onEnable(){
-        goLeft = onRightSideOfFarmInitial();
-        new Thread(() -> {
-            while(BlockUtils.isWalkable(BlockUtils.getBlockAround(0, -1, -1))){
-                setKeyBindState(keyBindShift, true);
-                setKeyBindState(keybindW, true);
-                threadSleep(1);
-            }
+        if (rotation.rotating) {
             resetKeybindState();
-            threadSleep(100);
-            playerYaw = Math.round(AngleUtils.get360RotationYaw() / 90) < 4 ? Math.round(AngleUtils.get360RotationYaw() / 90) * 90 : 0;
-            ExecuteRunnable(GoToNextTrench);
-
-        }).start();
-
-    }
-    @Override
-    public void onDisable(){
-        inDiggingTrench = false;
-        slowDig = false;
-        goLeft = false;
-        playerYaw = 0;
-    }
-
-    Runnable SlowDig = new Runnable() {
-        @Override
-        public void run() {
-            if(!enabled)
-                return;
-            try {
-                mc.thePlayer.inventory.currentItem = 2;
-                inDiggingTrench = true;
-                setKeyBindState(keybindAttack, false);
-                Thread.sleep(1000);
-                while((Math.abs(getBorderBlock().getX() - Math.floor(mc.thePlayer.posX)) > 2 || Math.abs(getBorderBlock().getZ() - Math.floor(mc.thePlayer.posZ)) > 2) && enabled){
-                    mc.thePlayer.rotationPitch = 60;
-                    Utils.addCustomLog("Digging a block");
-                    onTick(keybindAttack);
-                    Thread.sleep(1000);
-                }
-                ExecuteRunnable(JumpUpTrench);
-            }catch(Exception e) {
-                e.printStackTrace();
-            }
+            return;
         }
-    };
-    Runnable JumpUpTrench = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                if(!enabled)
-                    return;
 
-                mc.thePlayer.inventory.currentItem = 2;
-                setKeyBindState(keybindW, true);
-                setKeyBindState(keyBindJump, true);
-                Thread.sleep(200);
-                setKeyBindState(keyBindJump, false);
-                Thread.sleep(200);
-                resetKeybindState();
-                Thread.sleep(500);
+        if (aote) {
+            resetKeybindState();
+            Utils.addCustomMessage("Using AOTE");
+            // KeyBinding.onTick(keybindUseItem);
+            setKeyBindState(keybindUseItem, true);
+            Utils.addCustomMessage(mc.thePlayer.posX % 1 + " " + (mc.thePlayer.posX == 0.5));
+            if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
+                aote = false;
+                rotation.reset();
+                rotation.easeTo(AngleUtils.get360RotationYaw(), pitch, 500);
+                setKeyBindState(keybindUseItem, false);
+            }
+            return;
+        }
 
+        if (BuilderState.onParallel() == BuilderState.corner2.getParallel()) {
+            resetKeybindState();
+            Utils.addCustomLog("Dig trench completed");
+            CaneBuilder.switchToNextProcess(DigTrench.this);
+        }
 
-                if (goLeft)
-                    Utils.addCustomLog("Going left");
-                else
-                    Utils.addCustomLog("Going Right");
+        mc.thePlayer.inventory.currentItem = 2;
 
-                if (mc.thePlayer.rotationYaw < 180)
-                    AngleUtils.smoothRotateClockwise(180, 2);
-                else
-                    AngleUtils.smoothRotateAnticlockwise(180, 2);
-                Thread.sleep(1000);
-                if(shouldEndDiggingTrench()){
-                    Utils.addCustomLog("Dig trench completed");
-                    CaneBuilder.switchToNextProcess(DigTrench.this);
+        switch (currentState) {
+            case START:
+                if (BlockUtils.getBlockAround(1, 0, -1).equals(Blocks.air)) {
+                    updateKeys(false, false, true, false, false, false, true);
+                } else if (BlockUtils.getBlockAround(-1, 0, -1).equals(Blocks.air)) {
+                    updateKeys(false, false, false, true, false, false, true);
+                } else if (BlockUtils.getBlockAround(0, -1, -1).equals(Blocks.air)) {
+                    updateKeys(true, false, false, false, false, false, true);
                 } else {
-                    ExecuteRunnable(GoToNextTrench);
+                    currentState = State.WALK_NEXT;
                 }
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-
-        }
-    };
-    Runnable GoToNextTrench = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                BlockPos targetBlockPos;
-                mc.thePlayer.inventory.currentItem = 2;
-                if (goLeft)
-                    targetBlockPos = new BlockPos(BlockUtils.getUnitZ() * -1 * -3 + mc.thePlayer.posX, mc.thePlayer.posY,
-                            BlockUtils.getUnitX() * -3 + mc.thePlayer.posZ);
-                else
-                    targetBlockPos = new BlockPos(BlockUtils.getUnitZ() * -1 * 3 + mc.thePlayer.posX, mc.thePlayer.posY,
-                            BlockUtils.getUnitX() * 3 + mc.thePlayer.posZ);
-                resetKeybindState();
-                Utils.addCustomLog("target block : " + targetBlockPos);
-                while ((Math.floor(mc.thePlayer.posX) != targetBlockPos.getX() || Math.floor(mc.thePlayer.posZ) != targetBlockPos.getZ()) && enabled) {
-                    setKeyBindState(keyBindShift, true);
-                    setKeyBindState(keybindA, goLeft);
-                    setKeyBindState(keybindD, !goLeft);
-                    Thread.sleep(1);
-                }
-                resetKeybindState();
-                Thread.sleep(50);
-                setKeyBindState(keyBindShift, true);
-                // NEED ALIGNMENT
-                // Utils.align();
-                Thread.sleep(500);
-                Utils.addCustomLog("Starting new row");
-                goLeft = !goLeft;
-
-                if (playerYaw < 180)
-                    playerYaw += 180;
-                else
-                    playerYaw -= 180;
-                resetKeybindState();
-                AOTE();
-                mc.thePlayer.inventory.currentItem = 2;
-                ScheduleRunnable(InitializeDig, 1, TimeUnit.SECONDS);
                 return;
 
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-
-        }
-    };
-    Runnable InitializeDig = () -> {
-        try {
-            if(!enabled)
-                return;
-            mc.thePlayer.inventory.currentItem = 2;
-            playerYaw = Math.round(AngleUtils.get360RotationYaw() / 90) < 4 ? Math.round(AngleUtils.get360RotationYaw() / 90) * 90 : 0;
-            Utils.addCustomLog("Initialize digging");
-            resetKeybindState();
-            Utils.addCustomLog("Player Yaw : " + playerYaw);
-            AngleUtils.hardRotate(playerYaw);
-            AngleUtils.smoothRotatePitchTo(60, 1);
-            onTick(keybindAttack);
-            Thread.sleep(500);
-            AngleUtils.smoothRotatePitchTo(50, 1);
-            onTick(keybindAttack);
-            Thread.sleep(500);
-            AngleUtils.smoothRotatePitchTo(30, 1);
-            onTick(keybindAttack);
-            Thread.sleep(500);
-            AngleUtils.smoothRotatePitchTo(25, 1);
-            onTick(keybindAttack);
-            Thread.sleep(300);
-            setKeyBindState(keybindW, true);
-            Thread.sleep(300);
-            setKeyBindState(keybindW, false);
-            Thread.sleep(100);
-            Utils.addCustomLog("Pressing S");
-            setKeyBindState(keybindS, true);
-            Thread.sleep(300);
-            setKeyBindState(keybindS, false);
-            Thread.sleep(300);
-            if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) {
-                inDiggingTrench = true;
-                slowDig = false;
-                return;
-            }
-            else {
-                Utils.addCustomLog("Wrong location");
-            }
-
-
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-    };
-    boolean shouldEndDiggingTrench(){
-        if(onRightSideOfFarm()) {
-            Utils.addCustomLog("On right side of farm");
-            if(BlockUtils.getBlockAround(-3, 1, -1).equals(Blocks.air) && !BlockUtils.getBlockAround(-4, 1, -1).equals(Blocks.air)) {
-                for (int i = 0; i < 5; i++) {
-                    if (BlockUtils.getBlockAround(i, 0, -1).equals(Blocks.air))
-                        return true;
+            case DROP_DIG:
+                if (!BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air)) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 1, -1))) {
+                        onTick(keybindAttack);
+                        return;
+                    } else {
+                        rotation.easeTo(AngleUtils.get360RotationYaw(), 60, 500);
+                    }
+                } else if (!BlockUtils.getBlockAround(0, 2, -1).equals(Blocks.air)) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 2, -1))) {
+                        onTick(keybindAttack);
+                        return;
+                    } else {
+                        rotation.easeTo(AngleUtils.get360RotationYaw(), 50, 500);
+                    }
+                } else if (!BlockUtils.getBlockAround(0, 3, -1).equals(Blocks.air)) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 3, -1))) {
+                        onTick(keybindAttack);
+                        return;
+                    } else {
+                        rotation.easeTo(AngleUtils.get360RotationYaw(), 30, 500);
+                    }
+                } else if (!BlockUtils.getBlockAround(0, 4, -1).equals(Blocks.air)) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 4, -1))) {
+                        onTick(keybindAttack);
+                        return;
+                    } else {
+                        rotation.easeTo(AngleUtils.get360RotationYaw(), 25, 500);
+                    }
+                } else {
+                    resetKeybindState();
+                    rotation.easeTo(AngleUtils.getClosest(), 20, 500);
+                    currentState = State.FULL_DIG;
                 }
-            }
-        } else {
-            Utils.addCustomLog("On left side of farm");
-            if(BlockUtils.getBlockAround(3, 1, -1).equals(Blocks.air) && !BlockUtils.getBlockAround(4, 1, -1).equals(Blocks.air)) {
-                for (int i = 0; i > -5; i--) {
-                    if (BlockUtils.getBlockAround(i, 0, -1).equals(Blocks.air))
-                        return true;
+                return;
+
+            case FULL_DIG:
+                Utils.addCustomMessage(mc.thePlayer.posY + " " + BuilderState.corner1.getY() + 1 + " " + BlockUtils.getBlockAround(0, 3, 0));
+                if (BlockUtils.getBlockAround(0, 3, 0).equals(Blocks.air) &&
+                  BlockUtils.getBlockAround(0, 2, 0).equals(Blocks.dirt) &&
+                  BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt) &&
+                  (int) mc.thePlayer.posY == BuilderState.corner1.getY() + 1) {
+                    resetKeybindState();
+                    currentState = State.JUMP_OUT;
+                    return;
                 }
-            }
+
+                boolean shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 1 == mc.objectMouseOver.getBlockPos().getY() &&
+                  !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.air);
+
+                updateKeys(true, false, false, false, shouldDig);
+                return;
+
+            case JUMP_OUT:
+                if (mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
+                    KeyBinding.setKeyBindState(keyBindJump, false);
+                    resetKeybindState();
+                    Utils.addCustomMessage("Landed, switching to next trench");
+                    currentState = State.WALK_NEXT;
+                    rotation.easeTo(AngleUtils.get360RotationYaw() + 180, mc.thePlayer.rotationPitch, 1000);
+                    return;
+                }
+                updateKeys(true, false, false, false, false);
+                KeyBinding.setKeyBindState(keyBindJump, jumpCooldown.passed());
+                if (jumpCooldown.passed()) jumpCooldown.schedule(1000);
+                return;
+
+            case WALK_NEXT:
+                double rightVector = BlockUtils.getUnitX() * (BuilderState.corner2.getZ() - mc.thePlayer.posZ) + BlockUtils.getUnitZ() * (mc.thePlayer.posX - BuilderState.corner2.getX());
+                if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.dirt) &&
+                  BlockUtils.getBlockAround((rightVector > 0 ? -1 : 1), 1, -1).equals(Blocks.dirt) &&
+                  BlockUtils.getBlockAround((rightVector > 0 ? -1 : 1) * 3, 1, -1).equals(Blocks.air) &&
+                  BlockUtils.getBlockAround((rightVector > 0 ? 1 : -1), 1, -1).equals(Blocks.dirt)) {
+                    // Reached next row to dig
+                    currentState = State.DROP_DIG;
+                    rotation.easeTo(AngleUtils.get360RotationYaw(), 89, 500);
+                    mc.thePlayer.inventory.currentItem = 6;
+                    resetKeybindState();
+                    aote = true;
+                    pitch = mc.thePlayer.rotationPitch;
+                } else {
+                    updateKeys(false, false, rightVector < 0, rightVector > 0, false, false, true);
+                }
         }
-        return false;
+    }
+
+    @Override
+    public void onEnable() {
+        resetKeybindState();
+        currentState = State.START;
+        aote = false;
+        rotation.easeTo(AngleUtils.getClosest(), 60, 1000);
+    }
+
+    @Override
+    public void onDisable() {
 
     }
-    boolean onRightSideOfFarm(){
-        for (int i = 0; i < 10; i++) {
-            if (BlockUtils.isWalkable(BlockUtils.getBlockAround(i, -1, -1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-    boolean onRightSideOfFarmInitial(){
-        for (int i = 0; i < 10; i++) {
-            if (BlockUtils.isWalkable(BlockUtils.getBlockAround(i, 0, -1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-    BlockPos getBorderBlock(){
-        double X = mc.thePlayer.posX;
-        double Y = mc.thePlayer.posY;
-        double Z = mc.thePlayer.posZ;
-        for(int i = 0; i < 10; i++){
-            if(BlockUtils.getBlockAround(0, i, 0) != Blocks.air) {
-                if (BlockUtils.getBlockAround(0, i + 1, 0) == Blocks.air)
-                    return new BlockPos(BlockUtils.getUnitX() * i + X, Y - 1, BlockUtils.getUnitZ() * i + Z);
-            }
-        }
-        return null;
-    }
-
 }

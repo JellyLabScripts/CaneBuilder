@@ -1,65 +1,121 @@
 package com.jelly.CaneBuilder.processes;
+
+import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.CaneBuilder;
 import com.jelly.CaneBuilder.utils.AngleUtils;
+import com.jelly.CaneBuilder.utils.Clock;
 import com.jelly.CaneBuilder.utils.Utils;
+import static com.jelly.CaneBuilder.KeyBindHelper.*;
 import net.minecraft.block.Block;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 
-public class PlaceDirt5 extends ProcessModule{
+public class PlaceDirt5 extends ProcessModule {
     boolean onSecondLayer = false;
+    boolean aote = false;
+    float pitch;
+    Clock jumpCooldown = new Clock();
+    Clock placeCooldown = new Clock();
+    Clock teleportWait = new Clock();
+    Clock tpSet = new Clock();
+    boolean setTP = false;
+    enum State {
+        TELEPORTING,
+        PLACING
+    }
+    State currentState;
+
     @Override
     public void onTick() {
-        if(onSecondLayer) {
-            mc.thePlayer.inventory.currentItem = 1;
-            mc.thePlayer.rotationPitch = 82;
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
+        }
 
-            double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
-            double dz = Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ);
-            Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
-
-            setKeyBindState(keybindUseItem, dx == 0f && dz == 0f && !Utils.isInCenterOfBlockForward());
-            setKeyBindState(keybindS, true);
-            setKeyBindState(keyBindShift, true);
-
-            if ((int) mc.thePlayer.posZ == CaneBuilder.corner2z &&  blockStandingOn != Blocks.air) {
+        if (aote) {
+            resetKeybindState();
+            setKeyBindState(keybindUseItem, true);
+            if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
+                aote = false;
+                rotation.reset();
+                rotation.easeTo(AngleUtils.get360RotationYaw(), onSecondLayer ? 82 : 89, 500);
+                mc.thePlayer.inventory.currentItem = 1;
                 setKeyBindState(keybindUseItem, false);
-                setKeyBindState(keybindS, false);
-                setKeyBindState(keyBindShift, false);
-                CaneBuilder.switchToNextProcess(this);
-            } else {
-                AngleUtils.hardRotate(CaneBuilder.corner2z > CaneBuilder.corner1z ? 180 : 0);
             }
+            return;
+        }
+
+        if (currentState == State.TELEPORTING) {
+            if (Utils.getLocation() == Utils.location.ISLAND && teleportWait.passed()) {
+                resetKeybindState();
+                currentState = State.PLACING;
+                rotation.easeTo(AngleUtils.parallelToC1(), 89, 1000);
+                mc.thePlayer.inventory.currentItem = 6;
+                aote = true;
+            }
+            return;
+        }
+
+        if (setTP) {
+            if (tpSet.passed()) {
+                mc.thePlayer.sendChatMessage("/setspawn");
+                setTP = false;
+            }
+            resetKeybindState();
+            return;
+        }
+
+        if (!onSecondLayer) {
+            mc.thePlayer.inventory.currentItem = 7;
+            if (mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1.2) {
+                onSecondLayer = true;
+                setTP = true;
+                tpSet.schedule(2000);
+                rotation.easeTo(AngleUtils.parallelToC1(), 82, 600);
+            } else if (jumpCooldown.passed()) {
+                resetKeybindState();
+                setKeyBindState(keyBindJump, true);
+                jumpCooldown.schedule(1000);
+                placeCooldown.schedule(250);
+            } else {
+                boolean shouldPlace = mc.objectMouseOver != null && BuilderState.corner1.getY() + 1 == mc.objectMouseOver.getBlockPos().getY() && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 1.8;
+                setKeyBindState(keyBindJump, false);
+                updateKeys(false, false, false, false, false, shouldPlace, true);
+            }
+        } else {
+            mc.thePlayer.inventory.currentItem = 1;
+            boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
+            boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner2.getParallel();
+
+            if (hasPlacedEnd) {
+                Utils.addCustomLog("Done third line");
+                resetKeybindState();
+                CaneBuilder.switchToNextProcess(this);
+            }
+
+            updateKeys(false, true, false, false, false, shouldPlace, true);
         }
     }
+
     @Override
     public void onEnable() {
+        Utils.addCustomLog("enabled");
+        setTP = false;
         mc.thePlayer.inventory.currentItem = 1;
-        new Thread(() -> {
-            mc.thePlayer.sendChatMessage("/hub");
-            threadSleep(5000);
-            mc.thePlayer.sendChatMessage("/warp home");
-            threadSleep(5000);
-            setKeyBindState(keyBindShift, true);
-            threadSleep(500);
-            setKeyBindState(keyBindShift, false);
-            AngleUtils.smoothRotatePitchTo(89, 1.2f);
-            setKeyBindState(keyBindJump, true);
-            threadSleep(250);
-            setKeyBindState(keyBindJump, false);
-            KeyBinding.onTick(keybindUseItem);
-            threadSleep(1000);
-            mc.thePlayer.sendChatMessage("/setspawn");
-            threadSleep(500);
-            AngleUtils.smoothRotateTo(CaneBuilder.corner2z > CaneBuilder.corner1z ? 180 : 0, 1.2f);
-            threadSleep(500);
-            onSecondLayer = true;
-        }).start();
+        Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
+        Block blockBelowStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 2, mc.thePlayer.posZ)).getBlock();
+        Block blockBelowStandingOn2 = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 3, mc.thePlayer.posZ)).getBlock();
+        onSecondLayer = blockStandingOn.equals(Blocks.dirt) && blockBelowStandingOn.equals(Blocks.dirt) && blockBelowStandingOn2.equals(Blocks.dirt);
+        mc.thePlayer.inventory.currentItem = 1;
+        mc.thePlayer.sendChatMessage("/hub");
+        currentState = State.TELEPORTING;
+        teleportWait.schedule(2000);
     }
 
     @Override
-    public void onDisable(){
+    public void onDisable() {
+        Utils.addCustomLog("dddisabled");
         onSecondLayer = false;
     }
 }

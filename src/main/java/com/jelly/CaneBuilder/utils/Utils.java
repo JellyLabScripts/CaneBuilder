@@ -31,6 +31,14 @@ public class Utils {
     protected static boolean doesGameWantUngrabbed;
     protected static MouseHelper oldMouseHelper;
 
+    public enum location {
+        ISLAND,
+        HUB,
+        LOBBY,
+        LIMBO,
+        TELEPORTING
+    }
+
     public static void addCustomMessage(String msg){
         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
                 "[Cane Builder] : " + EnumChatFormatting.GRAY + msg));
@@ -43,7 +51,7 @@ public class Utils {
     }
     public static void addCustomLog(String log){
         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BLUE +
-                "[Cane Builder Log] : " + EnumChatFormatting.GRAY + log));
+                "[Log] : " + EnumChatFormatting.GRAY + log));
 
     }
 
@@ -159,7 +167,7 @@ public class Utils {
 
     }
     public static boolean isInCenterOfBlockForward(){
-        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ?Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
+        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
                 Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
 
     }
@@ -237,6 +245,30 @@ public class Utils {
             e.printStackTrace();
         }
     }
+    public static location getLocation() {
+        if (ScoreboardUtils.getScoreboardLines().size() == 0) {
+            if (BlockUtils.countCarpet() > 0) {
+                return location.LIMBO;
+            }
+            return location.TELEPORTING;
+        }
+
+        for (String line : ScoreboardUtils.getScoreboardLines()) {
+            String cleanedLine = ScoreboardUtils.cleanSB(line);
+            if (cleanedLine.contains("Village")) {
+                return location.HUB;
+            } else if (cleanedLine.contains("Island")) {
+                return location.ISLAND;
+            }
+        }
+
+        if (ScoreboardUtils.getScoreboardDisplayName(1).contains("SKYBLOCK")) {
+            return location.TELEPORTING;
+        } else {
+            return location.LOBBY;
+        }
+    }
+
    /* public static void ungrabMouse() {
         Minecraft m = Minecraft.getMinecraft();
         if (isUngrabbed) return;

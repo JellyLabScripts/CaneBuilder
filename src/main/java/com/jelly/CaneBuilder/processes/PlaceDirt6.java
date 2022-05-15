@@ -1,29 +1,42 @@
 package com.jelly.CaneBuilder.processes;
+
+import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.CaneBuilder;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
+import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import net.minecraft.util.EnumFacing;
 
 public class PlaceDirt6 extends ProcessModule{
     @Override
     public void onTick() {
         mc.thePlayer.inventory.currentItem = 0;
-        mc.thePlayer.rotationPitch = 82;
-        double dx = Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX);
-        double dz = Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ);
-        Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
-        setKeyBindState(keybindUseItem, dx == 0f && dz == 0f && !Utils.isInCenterOfBlockForward());
-        setKeyBindState(keybindS, true);
-        setKeyBindState(keyBindShift, true);
-        if ((int) mc.thePlayer.posX == CaneBuilder.corner2x && blockStandingOn != Blocks.air) {
-            Utils.addCustomMessage("Second dirt layer done");
-            CaneBuilder.switchToNextProcess(this);
-        } else {
-            AngleUtils.hardRotate(CaneBuilder.corner2x > CaneBuilder.corner1x ? 90 : 270);
+
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
         }
+
+        boolean shouldPlace = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
+        boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtPerpendicular() == BuilderState.corner2.getPerpendicular();
+
+        if (hasPlacedEnd) {
+            Utils.addCustomMessage("Third dirt layer done");
+            resetKeybindState();
+            CaneBuilder.switchToNextProcess(this);
+        }
+
+        updateKeys(false, true, false, false, false, shouldPlace, true);
+    }
+
+    @Override
+    public void onEnable() {
+        rotation.easeTo(AngleUtils.perpendicularToC1(), 82, 1000);
+    }
+
+    @Override
+    public void onDisable() {
+
     }
 
 
