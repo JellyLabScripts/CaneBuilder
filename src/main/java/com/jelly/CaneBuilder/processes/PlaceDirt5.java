@@ -72,7 +72,7 @@ public class PlaceDirt5 extends ProcessModule {
             if (mc.objectMouseOver != null && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1))
                     && BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, -1, -1))
                     && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1.2) {
-                Utils.addCustomLog("On second layer");
+                Utils.addCustomLog("On third layer");
                 onSecondLayer = true;
                 setTP = true;
                 tpSet.schedule(2000);
@@ -104,7 +104,6 @@ public class PlaceDirt5 extends ProcessModule {
 
     @Override
     public void onEnable() {
-        Utils.addCustomLog("enabled");
         setTP = false;
         mc.thePlayer.inventory.currentItem = 1;
         Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
@@ -119,7 +118,6 @@ public class PlaceDirt5 extends ProcessModule {
 
     @Override
     public void onDisable() {
-        Utils.addCustomLog("dddisabled");
         onSecondLayer = false;
     }
 }

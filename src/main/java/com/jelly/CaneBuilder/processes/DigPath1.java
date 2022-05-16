@@ -141,7 +141,7 @@ public class DigPath1 extends ProcessModule {
                     if (current == 1) {
                         resetKeybindState();
                         CaneBuilder.switchToNextProcess(this);
-                        Utils.addCustomLog("Completed digpath1");
+                        Utils.addCustomLog("Completed dig path 1");
                         return;
                     }
                     resetKeybindState();

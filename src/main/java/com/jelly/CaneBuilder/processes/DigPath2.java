@@ -79,7 +79,7 @@ public class DigPath2 extends ProcessModule {
     private void updateState() {
         if (currentState == State.FORWARDS && !BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.air)) {
             currentState = State.NONE;
-            Utils.addCustomLog("Completed dig path");
+            Utils.addCustomMessage("Completed Dig Path!");
             resetKeybindState();
             CaneBuilder.switchToNextProcess(this);
             return;

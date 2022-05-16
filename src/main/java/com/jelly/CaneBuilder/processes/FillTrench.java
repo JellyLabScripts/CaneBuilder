@@ -48,7 +48,7 @@ public class FillTrench extends ProcessModule {
         if (done) {
             resetKeybindState();
             if (wait.passed()) {
-                Utils.addCustomLog("Fill trench completed");
+                Utils.addCustomMessage("Fill trench completed!");
                 CaneBuilder.switchToNextProcess(this);
             }
             return;
@@ -59,7 +59,8 @@ public class FillTrench extends ProcessModule {
             resetKeybindState();
             if (!done) {
                 done = true;
-                wait.schedule(3000);
+                Utils.addCustomLog("Waiting 10 seconds for water flow");
+                wait.schedule(10000);
             }
             return;
         }
@@ -113,7 +114,7 @@ public class FillTrench extends ProcessModule {
                     currentState = State.WALK_NEXT;
                 } else {
                     resetKeybindState();
-                    Utils.addCustomMessage("Waiting for water to flow backwards");
+                    Utils.addCustomLog("Waiting for water to flow backwards");
                 }
                 return;
 

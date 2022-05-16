@@ -3,24 +3,30 @@ package com.jelly.CaneBuilder;
 import com.jelly.CaneBuilder.commands.Corner1;
 import com.jelly.CaneBuilder.commands.Corner2;
 import com.jelly.CaneBuilder.commands.SetDirection;
+import com.jelly.CaneBuilder.config.Config;
 import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MouseHelper;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,41 +34,31 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/*
+ ** @author JellyLab, Polycrylate
+ */
+
 @Mod(modid = CaneBuilder.MODID, version = CaneBuilder.VERSION)
 public class CaneBuilder {
     public static final String MODID = "canebuilder";
     public static final String NAME = "Cane Builder";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "2.0";
 
     public static List<ProcessModule> processes = new ArrayList<>();
-    static Minecraft mc = Minecraft.getMinecraft();
+    public static Minecraft mc = Minecraft.getMinecraft();
 
-    //states
-    static boolean diggingPath = false;
-    static boolean diggingTrench = false;
-    static boolean goLeft = false;
     static boolean inFailsafe;
     static boolean error;
-    // for digging trench path
-    static boolean slowDig;
-    static boolean inDiggingTrench;
-    // for digging path part
-
-    //for placing sugarcane
-
-    //autoclicker
-    static long initialTime = 0;
-
-    /*
-     ** @author JellyLab, Polycrylate
-     */
-
-    public volatile static int playerYaw;
 
     MouseHelper mouseHelper = new MouseHelper();
 
     @Mod.EventHandler
     public static void init(FMLInitializationEvent event) {
+        try {
+            Config.readConfig();
+        } catch (Exception e) {
+            System.out.println("Error reading config file");
+        }
         System.out.println("Registering");
         MinecraftForge.EVENT_BUS.register(new CaneBuilder());
         ClientCommandHandler.instance.registerCommand(new SetDirection());
@@ -110,12 +106,30 @@ public class CaneBuilder {
         }
     }
 
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void render(RenderGameOverlayEvent event) {
+        if (event.type == RenderGameOverlayEvent.ElementType.TEXT) {
+            int topPad = 0;
+            if (mc.gameSettings.showDebugInfo) {
+                topPad = (new ScaledResolution(mc).getScaledHeight() / 2) - 50;
+            }
+            Utils.drawStringWithShadow(
+              EnumChatFormatting.DARK_GREEN + "-- " + EnumChatFormatting.DARK_GREEN + "" + EnumChatFormatting.BOLD + "CANE BUILDER" + EnumChatFormatting.DARK_GREEN + " --", 4, topPad + 25, 1f, -1);
+            Utils.drawStringWithShadow(
+              EnumChatFormatting.WHITE + "" + "Corner 1: " + (BuilderState.corner1 != null ? EnumChatFormatting.GREEN + BuilderState.corner1.toString() : EnumChatFormatting.RED + "Not set"), 4, topPad + 40, 1f, -1);
+            Utils.drawStringWithShadow(
+              EnumChatFormatting.WHITE + "" + "Corner 2: " + (BuilderState.corner2 != null ? EnumChatFormatting.GREEN + BuilderState.corner2.toString() : EnumChatFormatting.RED + "Not set"), 4, topPad + 50, 1f, -1);
+            Utils.drawStringWithShadow(
+              EnumChatFormatting.WHITE + "" + "Direction: " + (BuilderState.direction != -1 ? EnumChatFormatting.GREEN + (BuilderState.direction == 0 ? "North / South" : "East / West") : EnumChatFormatting.RED + "Not set"), 4, topPad + 60, 1f, -1);
+        }
+    }
+
     @SubscribeEvent
     public void onMessageReceived(ClientChatReceivedEvent event) {
-
         if (event.message.getFormattedText().contains("You were spawned in Limbo") && !inFailsafe && BuilderState.enabled) {
             activateFailsafe();
-            ScheduleRunnable(LeaveSBIsand, 8, TimeUnit.SECONDS);
+            ScheduleRunnable(LeaveSBIsland, 8, TimeUnit.SECONDS);
         }
         if ((event.message.getFormattedText().contains("Sending to server") && !inFailsafe && BuilderState.enabled)) {
             activateFailsafe();
@@ -126,7 +140,7 @@ public class CaneBuilder {
         }
         if ((event.message.getFormattedText().contains("SkyBlock Lobby") && !inFailsafe && BuilderState.enabled)) {
             activateFailsafe();
-            ScheduleRunnable(LeaveSBIsand, 10, TimeUnit.SECONDS);
+            ScheduleRunnable(LeaveSBIsland, 10, TimeUnit.SECONDS);
         }
     }
 
@@ -141,14 +155,14 @@ public class CaneBuilder {
                     processes.get(i + 1).onEnable();
                     processes.get(i + 1).toggle();
                 } else {
-                    Utils.addCustomLog("Completed process");
-                    KeyBindHelper.updateKeys(false, false, false, false, false, false, false);
+                    Utils.addCustomMessage("Completed Layer!", EnumChatFormatting.GREEN);
+                    disableScript();
                 }
             }
         }
     }
 
-    Runnable LeaveSBIsand = new Runnable() {
+    Runnable LeaveSBIsland = new Runnable() {
         @Override
         public void run() {
             mc.thePlayer.sendChatMessage("/l");
@@ -200,7 +214,7 @@ public class CaneBuilder {
         mc.inGameHasFocus = true;
         mouseHelper.grabMouseCursor();
         mc.displayGuiScreen(null);
-        Field f = null;
+        Field f;
         f = FieldUtils.getDeclaredField(mc.getClass(), "leftClickCounter", true);
         try {
             f.set(mc, 10000);
@@ -220,19 +234,13 @@ public class CaneBuilder {
     }
 
     void initVar() {
-        slowDig = false;
-        inDiggingTrench = false;
         inFailsafe = false;
-        error = false;
-        // playerYaw = Math.round(AngleUtils.get360RotationYaw() / 90) < 4 ? Math.round(AngleUtils.get360RotationYaw() / 90) * 90 : 0;
     }
 
     public static void disableScript() {
         BuilderState.enabled = false;
-        diggingTrench = false;
-        diggingPath = false;
-        Utils.addCustomMessage("Disabling script");
-        KeyBindHelper.updateKeys(false, false, false, false, false, false, false);
+        Utils.addCustomMessage("Disabling script", EnumChatFormatting.RED);
+        KeyBindHelper.resetKeybindState();
         for (ProcessModule process : processes) {
             if (process.isEnabled()) {
                 process.onDisable();

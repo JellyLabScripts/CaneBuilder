@@ -15,12 +15,6 @@ public abstract class ProcessModule {
     public boolean enabled = false;
     public Rotation rotation = new Rotation();
 
-    enum direction {
-        RIGHT,
-        LEFT,
-        NONE
-    }
-
     public abstract void onTick();
 
     public void onRenderWorld() {

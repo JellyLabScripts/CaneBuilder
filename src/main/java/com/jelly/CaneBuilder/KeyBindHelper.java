@@ -3,10 +3,15 @@ package com.jelly.CaneBuilder;
 import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class KeyBindHelper {
     static Minecraft mc = Minecraft.getMinecraft();
@@ -37,6 +42,7 @@ public class KeyBindHelper {
     }
 
     public static void onKeyPress(InputEvent.KeyInputEvent event) {
+
         if (customKeyBinds[0].isKeyDown()) {
             if (setmode == 0) {
                 BuilderState.setCorner1((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
@@ -44,24 +50,38 @@ public class KeyBindHelper {
                 BuilderState.setCorner2((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
             }
             setmode = 1 - setmode;
+            return;
+        }
+
+        if (customKeyBinds[6].isKeyDown()) {
+            for (ProcessModule process : CaneBuilder.processes) {
+                if (process.isEnabled()) {
+                    process.toggle();
+                    process.onDisable();
+                }
+            }
+            CaneBuilder.disableScript();
+            return;
+        }
+
+        if (Arrays.stream(customKeyBinds).map(KeyBinding::isKeyDown).collect(Collectors.toList()).contains(true) &&
+          (BuilderState.corner1 == null || BuilderState.corner2 == null || BuilderState.direction == -1)) {
+            Utils.addCustomMessage("You must set the corners and direction!", EnumChatFormatting.RED);
+            return;
         }
 
         if (customKeyBinds[1].isKeyDown()) {
             if (!BuilderState.enabled) {
-                if (BuilderState.corner1 == null || BuilderState.corner2 == null) {
-                    Utils.addCustomMessage("Please set the corners");
-                } else {
-                    if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
-                        for (ProcessModule process : CaneBuilder.processes) {
-                            if (process instanceof PlaceDirt1) {
-                                process.toggle();
-                                process.onEnable();
-                                BuilderState.enabled = true;
-                            }
+                if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
+                    for (ProcessModule process : CaneBuilder.processes) {
+                        if (process instanceof PlaceDirt1) {
+                            process.toggle();
+                            process.onEnable();
+                            BuilderState.enabled = true;
                         }
-                    } else {
-                        Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
                     }
+                } else {
+                    Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
                 }
             }
         }
@@ -115,15 +135,6 @@ public class KeyBindHelper {
             }
 
         }
-        if (customKeyBinds[6].isKeyDown()) {
-            for (ProcessModule process : CaneBuilder.processes) {
-                if (process.isEnabled()) {
-                    process.toggle();
-                    process.onDisable();
-                }
-            }
-            CaneBuilder.disableScript();
-        }
     }
 
     public static void setKeyBindState(int keyCode, boolean pressed) {
@@ -138,6 +149,10 @@ public class KeyBindHelper {
     }
 
     public static void updateKeys(boolean wBool, boolean sBool, boolean aBool, boolean dBool, boolean atkBool, boolean useBool, boolean shiftBool) {
+        if (mc.currentScreen != null) {
+            resetKeybindState();
+            return;
+        }
         KeyBinding.setKeyBindState(keybindW, wBool);
         KeyBinding.setKeyBindState(keybindS, sBool);
         KeyBinding.setKeyBindState(keybindA, aBool);
@@ -148,6 +163,10 @@ public class KeyBindHelper {
     }
 
     public static void updateKeys(boolean wBool, boolean sBool, boolean aBool, boolean dBool, boolean atkBool) {
+        if (mc.currentScreen != null) {
+            resetKeybindState();
+            return;
+        }
         KeyBinding.setKeyBindState(keybindW, wBool);
         KeyBinding.setKeyBindState(keybindS, sBool);
         KeyBinding.setKeyBindState(keybindA, aBool);

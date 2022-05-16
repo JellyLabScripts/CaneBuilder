@@ -21,7 +21,7 @@ public class PlaceDirt2 extends ProcessModule{
         boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtPerpendicular() == BuilderState.corner2.getPerpendicular();
 
         if (hasPlacedEnd) {
-            Utils.addCustomMessage("First dirt layer done");
+            Utils.addCustomMessage("First dirt layer complete!");
             resetKeybindState();
             CaneBuilder.switchToNextProcess(this);
         }

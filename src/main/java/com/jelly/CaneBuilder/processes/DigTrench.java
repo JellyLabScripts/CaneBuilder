@@ -36,10 +36,8 @@ public class DigTrench extends ProcessModule {
 
         if (aote) {
             resetKeybindState();
-            Utils.addCustomMessage("Using AOTE");
             // KeyBinding.onTick(keybindUseItem);
             setKeyBindState(keybindUseItem, true);
-            Utils.addCustomMessage(mc.thePlayer.posX % 1 + " " + (mc.thePlayer.posX == 0.5));
             if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
                 aote = false;
                 rotation.reset();
@@ -107,7 +105,6 @@ public class DigTrench extends ProcessModule {
                 return;
 
             case FULL_DIG:
-                Utils.addCustomMessage(mc.thePlayer.posY + " " + BuilderState.corner1.getY() + 1 + " " + BlockUtils.getBlockAround(0, 3, 0));
                 if (BlockUtils.getBlockAround(0, 3, 0).equals(Blocks.air) &&
                   BlockUtils.getBlockAround(0, 2, 0).equals(Blocks.dirt) &&
                   BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt) &&
@@ -127,7 +124,7 @@ public class DigTrench extends ProcessModule {
                 if (mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     KeyBinding.setKeyBindState(keyBindJump, false);
                     resetKeybindState();
-                    Utils.addCustomMessage("Landed, switching to next trench");
+                    Utils.addCustomLog("Landed, switching to next trench");
                     currentState = State.WALK_NEXT;
                     rotation.easeTo(AngleUtils.get360RotationYaw() + 180, mc.thePlayer.rotationPitch, 1000);
                     return;

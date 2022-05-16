@@ -1,9 +1,11 @@
 package com.jelly.CaneBuilder;
 
+import com.jelly.CaneBuilder.config.Config;
 import com.jelly.CaneBuilder.structures.Coord;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumChatFormatting;
 
 public class BuilderState {
     private static final Minecraft mc = Minecraft.getMinecraft();
@@ -14,12 +16,14 @@ public class BuilderState {
 
     public static void setCorner1(int x, int y, int z) {
         corner1 = new Coord(x, y, z);
-        Utils.addCustomLog("Set corner 1 to: " + corner1);
+        Utils.addCustomMessage("Set corner 1 to: " + corner1, EnumChatFormatting.GREEN);
+        Config.writeConfig();
     }
 
     public static void setCorner2(int x, int y, int z) {
         corner2 = new Coord(x, y, z);
-        Utils.addCustomLog("Set corner 2 to: " + corner2);
+        Utils.addCustomMessage("Set corner 2 to: " + corner2, EnumChatFormatting.GREEN);
+        Config.writeConfig();
     }
 
     public static int lookingAtParallel() {

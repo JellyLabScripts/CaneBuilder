@@ -2,6 +2,7 @@ package com.jelly.CaneBuilder.utils;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -39,42 +40,58 @@ public class Utils {
         TELEPORTING
     }
 
-    public static void addCustomMessage(String msg){
-        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
-                "[Cane Builder] : " + EnumChatFormatting.GRAY + msg));
-
+    public static void drawString(String text, int x, int y, float size, int color) {
+        GlStateManager.scale(size, size, size);
+        float mSize = (float) Math.pow(size, -1);
+        Minecraft.getMinecraft().fontRendererObj.drawString(text, Math.round(x / size), Math.round(y / size), color);
+        GlStateManager.scale(mSize, mSize, mSize);
     }
-    public static void addCustomMessage(String msg, EnumChatFormatting color){
-        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
-                "[Cane Builder] : " + color + msg));
 
+    public static void drawStringWithShadow(String text, int x, int y, float size, int color) {
+        GlStateManager.scale(size,size,size);
+        float mSize = (float)Math.pow(size,-1);
+        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text,Math.round(x / size),Math.round(y / size),color);
+        GlStateManager.scale(mSize,mSize,mSize);
     }
-    public static void addCustomLog(String log){
+
+    public static void addCustomMessage(String msg) {
+        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
+          "[Cane Builder] : " + EnumChatFormatting.GRAY + msg));
+    }
+
+    public static void addCustomMessage(String msg, EnumChatFormatting color) {
+        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GREEN +
+          "[Cane Builder] : " + color + msg));
+    }
+
+    public static void addCustomLog(String log) {
         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BLUE +
-                "[Log] : " + EnumChatFormatting.GRAY + log));
-
+          "[Log] : " + EnumChatFormatting.GRAY + log));
     }
 
     public static int nextInt(int upperbound) {
         Random r = new Random();
         return r.nextInt(upperbound);
     }
-    public static boolean hasSugarcaneInInv(){
-        for(Slot slot : Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots) {
+
+    public static boolean hasSugarcaneInInv() {
+        for (Slot slot : Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots) {
             if (slot != null) {
                 try {
                     if (slot.getStack().getItem().equals(Items.reeds))
                         return true;
-                }catch(Exception e){
+                } catch (Exception e) {
 
                 }
             }
         }
         return false;
     }
-    public static double roundTo2DecimalPlaces(double d){
+
+    public static double roundTo2DecimalPlaces(double d) {
         return Math.floor(d * 100) / 100;
     }
+
     public static boolean hasSugarcaneInHotbar() {
         for (int i = 36; i < 45; i++) {
             if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
@@ -88,20 +105,22 @@ public class Utils {
         }
         return false;
     }
-    public static boolean hasSugarcaneInMainInv(){
-        for(int  i = 9; i < 36; i++) {
+
+    public static boolean hasSugarcaneInMainInv() {
+        for (int i = 9; i < 36; i++) {
             if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
                 try {
                     if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i).getStack().getItem().equals(Items.reeds))
                         return true;
-                }catch(Exception e){
+                } catch (Exception e) {
 
                 }
             }
         }
         return false;
     }
-    public static boolean isHotbarFull(){
+
+    public static boolean isHotbarFull() {
         try {
             for (int i = 36; i < 45; i++) {
                 if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i).getStack().getDisplayName() == null) {
@@ -109,7 +128,7 @@ public class Utils {
                     return false;
                 }
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             return false;
         }
         return true;
@@ -123,7 +142,7 @@ public class Utils {
                     try {
                         if (slot.getStack().getItem().equals(Items.reeds))
                             return slot.slotNumber;
-                    }catch(Exception e){
+                    } catch (Exception e) {
 
                     }
                 }
@@ -136,12 +155,12 @@ public class Utils {
 
 
     public static int getFirstHotbarSlotWithSugarcane() {
-        for(int  i = 36; i < 45; i++) {
+        for (int i = 36; i < 45; i++) {
             if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
                 try {
                     if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i).getStack().getItem().equals(Items.reeds))
                         return i;
-                }catch(Exception e){
+                } catch (Exception e) {
 
                 }
             }
@@ -149,6 +168,7 @@ public class Utils {
         return 36;
 
     }
+
     public static int getFirstSlotWithDirt() {
         for (Slot slot : Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots) {
             if (slot != null) {
@@ -156,7 +176,7 @@ public class Utils {
                     try {
                         if (slot.getStack().getItem().equals(Item.getItemFromBlock(Blocks.dirt)))
                             return slot.slotNumber;
-                    }catch(Exception e){
+                    } catch (Exception e) {
 
                     }
                 }
@@ -166,17 +186,20 @@ public class Utils {
         return -1;
 
     }
-    public static boolean isInCenterOfBlockForward(){
+
+    public static boolean isInCenterOfBlockForward() {
         return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
-                Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
+          Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
 
     }
-    public static boolean isInCenterOfBlockSideways(){
-        return (Math.round(AngleUtils.get360RotationYaw()) == 90 || Math.round(AngleUtils.get360RotationYaw()) == 270) ?Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
-                Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
+
+    public static boolean isInCenterOfBlockSideways() {
+        return (Math.round(AngleUtils.get360RotationYaw()) == 90 || Math.round(AngleUtils.get360RotationYaw()) == 270) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
+          Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
 
     }
-    public static synchronized void goToRelativeBlock(int rightOffset, int frontOffset){
+
+    public static synchronized void goToRelativeBlock(int rightOffset, int frontOffset) {
         try {
             setKeyBindState(keyBindShift, true);
             BlockPos targetBlockPos = BlockUtils.getBlockPosAround(0, frontOffset, 0);
@@ -193,13 +216,14 @@ public class Utils {
                 Thread.sleep(1);
             }
             resetKeybindState();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    protected static void setKeyBindState(int keyCode, boolean pressed){
-        if(pressed){
-            if(mc.currentScreen != null){
+
+    protected static void setKeyBindState(int keyCode, boolean pressed) {
+        if (pressed) {
+            if (mc.currentScreen != null) {
                 Utils.addCustomLog("In GUI, pausing");
                 KeyBinding.setKeyBindState(keyCode, false);
                 return;
@@ -207,7 +231,8 @@ public class Utils {
         }
         KeyBinding.setKeyBindState(keyCode, pressed);
     }
-    protected static void resetKeybindState(){
+
+    protected static void resetKeybindState() {
         KeyBinding.setKeyBindState(keybindA, false);
         KeyBinding.setKeyBindState(keybindS, false);
         KeyBinding.setKeyBindState(keybindW, false);
@@ -217,6 +242,7 @@ public class Utils {
         KeyBinding.setKeyBindState(keybindAttack, false);
         KeyBinding.setKeyBindState(keybindUseItem, false);
     }
+
     public static void goToBlock(int x, int z) {
         try {
             double xdiff = x + 0.5 - mc.thePlayer.posX;
@@ -245,6 +271,7 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
     public static location getLocation() {
         if (ScoreboardUtils.getScoreboardLines().size() == 0) {
             if (BlockUtils.countCarpet() > 0) {

@@ -22,7 +22,7 @@ public class PlaceDirt4 extends ProcessModule{
 
         if (hasPlacedEnd) {
             mc.thePlayer.sendChatMessage("/setspawn");
-            Utils.addCustomMessage("Second dirt layer done");
+            Utils.addCustomMessage("Second dirt layer complete!");
             resetKeybindState();
             CaneBuilder.switchToNextProcess(this);
         }

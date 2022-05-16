@@ -48,7 +48,7 @@ public class PlaceSC extends ProcessModule {
         if(blockLagged() && !lagged){
             Utils.addCustomLog("Detected lag");
             lagged = true;
-            lagCooldown.schedule(1000);
+            lagCooldown.schedule(700);
         }
         if(lagged){
             Utils.addCustomLog("Lagging");
@@ -142,7 +142,6 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(500);
                 mc.thePlayer.closeScreen();
                 threadSleep(500);
-                Utils.addCustomLog(AngleUtils.parallelToC1() + " ");
                 rotation.easeTo(AngleUtils.parallelToC1(), 89f, 1000);
                 while(rotation.rotating)
                     threadSleep(1);
