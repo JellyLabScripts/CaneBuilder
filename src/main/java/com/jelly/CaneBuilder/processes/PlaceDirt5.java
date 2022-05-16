@@ -3,6 +3,7 @@ package com.jelly.CaneBuilder.processes;
 import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.CaneBuilder;
 import com.jelly.CaneBuilder.utils.AngleUtils;
+import com.jelly.CaneBuilder.utils.BlockUtils;
 import com.jelly.CaneBuilder.utils.Clock;
 import com.jelly.CaneBuilder.utils.Utils;
 import static com.jelly.CaneBuilder.KeyBindHelper.*;
@@ -68,7 +69,10 @@ public class PlaceDirt5 extends ProcessModule {
 
         if (!onSecondLayer) {
             mc.thePlayer.inventory.currentItem = 7;
-            if (mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1.2) {
+            if (mc.objectMouseOver != null && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1))
+                    && BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, -1, -1))
+                    && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1.2) {
+                Utils.addCustomLog("On second layer");
                 onSecondLayer = true;
                 setTP = true;
                 tpSet.schedule(2000);
@@ -79,7 +83,7 @@ public class PlaceDirt5 extends ProcessModule {
                 jumpCooldown.schedule(1000);
                 placeCooldown.schedule(250);
             } else {
-                boolean shouldPlace = mc.objectMouseOver != null && BuilderState.corner1.getY() + 1 == mc.objectMouseOver.getBlockPos().getY() && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 1.8;
+                boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 1.8;
                 setKeyBindState(keyBindJump, false);
                 updateKeys(false, false, false, false, false, shouldPlace, true);
             }

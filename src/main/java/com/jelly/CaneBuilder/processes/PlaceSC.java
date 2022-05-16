@@ -1,63 +1,78 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.CaneBuilder;
-import com.jelly.CaneBuilder.utils.AngleUtils;
-import com.jelly.CaneBuilder.utils.BlockUtils;
-import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.*;
 
 import static com.jelly.CaneBuilder.KeyBindHelper.*;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
+import scala.concurrent.Await;
+
+import java.util.ArrayList;
 
 public class PlaceSC extends ProcessModule {
-    boolean aote = false;
-    boolean walkingForward;
     boolean refillingSc;
     boolean canePlaceLag;
     boolean switching = false;
     boolean lagged = false;
-    float pitch;
+    boolean pushedOff = false;
+    BlockPos targetBlockPos = new BlockPos(10000, 10000, 10000);
     Clock lagCooldown = new Clock();
     State currentState;
+    State lastState;
 
-    enum State {
+    enum State{
         START,
-        EDGE_RIGHT,
-        EDGE_LEFT,
         RIGHT,
         LEFT,
-        FORWARDS,
+        FORWARD,
+        SWITCH,
         NONE
     }
+    
 
     @Override
     public void onTick() {
-        if (rotation.rotating || currentState == State.START) {
+        if (rotation.rotating || refillingSc) {
             resetKeybindState();
             return;
         }
+        if(currentState == State.START)
+            return;
 
-        if (aote) {
-            mc.thePlayer.inventory.currentItem = 6;
-            resetKeybindState();
-            setKeyBindState(keybindUseItem, true);
-            if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
-                aote = false;
-                rotation.reset();
-                rotation.easeTo(AngleUtils.get360RotationYaw(), pitch, 500);
-                mc.thePlayer.inventory.currentItem = 2;
-                setKeyBindState(keybindUseItem, false);
-
-            }
+        if(blockLagged() && !lagged){
+            Utils.addCustomLog("Detected lag");
+            lagged = true;
+            lagCooldown.schedule(1000);
+        }
+        if(lagged){
+            Utils.addCustomLog("Lagging");
+           if(lagCooldown.passed()) {
+               targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+               lagged = false;
+           }
+            updateKeys(false, false, currentState == State.RIGHT, currentState == State.LEFT, false, true, false);
             return;
         }
+        if(!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
+            refillingSc = true;
+            updateKeys(false, false, false, false, false, false, false);
+            ExecuteRunnable(RefillSc);
+            return;
+        }
+
 
         updateState();
 
+
+        lastState = currentState;
+
+        mc.thePlayer.rotationPitch = 50;
         mc.thePlayer.inventory.currentItem = Utils.getFirstHotbarSlotWithSugarcane() - 36;
 
         switch (currentState) {
@@ -67,8 +82,17 @@ public class PlaceSC extends ProcessModule {
             case RIGHT:
                 updateKeys(false, false, false, true, false, true, false);
                 return;
-            case FORWARDS:
+            case SWITCH:
+                Utils.addCustomLog("Switching");
+                updateKeys(false, false, false, false, false, true, false);
+                if (!pushedOff) {
+                    updateKeys(false, false, !BlockUtils.isWalkable(BlockUtils.getLeftBlock()), BlockUtils.isWalkable(BlockUtils.getLeftBlock()), false, true, false);
+                }
+                pushedOff = true;
+                return;
+            case FORWARD:
                 updateKeys(true, false, false, false, false, false, true);
+                pushedOff = false;
                 return;
             default:
                 resetKeybindState();
@@ -77,6 +101,11 @@ public class PlaceSC extends ProcessModule {
 
     @Override
     public void onEnable() {
+        canePlaceLag = false;
+        refillingSc = false;
+        lagged = false;
+        switching = false;
+        currentState = State.START;
         new Thread(() -> {
             try {
                 threadSleep(500);
@@ -113,19 +142,31 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(500);
                 mc.thePlayer.closeScreen();
                 threadSleep(500);
+                Utils.addCustomLog(AngleUtils.parallelToC1() + " ");
+                rotation.easeTo(AngleUtils.parallelToC1(), 89f, 1000);
+                while(rotation.rotating)
+                    threadSleep(1);
+                Utils.goToRelativeBlock(0, calculateInitWalk());
+                threadSleep(500);
+                mc.thePlayer.inventory.currentItem = 6;
+                resetKeybindState();
+                setKeyBindState(keybindUseItem, true);
+                if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
+                    Utils.addCustomLog("in center");
+                    rotation.reset();
+                    rotation.easeTo(AngleUtils.get360RotationYaw(), 50f, 500);
+                    mc.thePlayer.inventory.currentItem = 2;
+                    setKeyBindState(keybindUseItem, false);
+                }
+                threadSleep(500);
                 currentState = State.NONE;
-                rotation.easeTo(AngleUtils.parallelToC1(), 50f, 1000);
+                targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
         resetKeybindState();
-        canePlaceLag = false;
-        refillingSc = false;
-        currentState = State.START;
-        lagged = false;
-        aote = false;
-        switching = false;
+
         // rotation.easeTo(AngleUtils.parallelToC2(), 11.5f, 1000);
     }
 
@@ -135,92 +176,28 @@ public class PlaceSC extends ProcessModule {
     }
 
     private void updateState() {
-        if (currentState == State.START) return;
-
-        if (currentState == State.FORWARDS && BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt)) {
-            currentState = State.NONE;
-            Utils.addCustomLog("Completed sugarcane placement");
-            resetKeybindState();
-            CaneBuilder.switchToNextProcess(this);
+        BlockPos blockInPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+        if(lastState == State.SWITCH){
+            currentState = State.FORWARD;
             return;
         }
-
-        if (currentState != State.START && (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv())) {
-            currentState = State.START;
-            resetKeybindState();
-            ExecuteRunnable(RefillSc);
+        if(lastState == State.FORWARD){
+            if(blockInPos.getX() != targetBlockPos.getX() || blockInPos.getZ() != targetBlockPos.getZ() || !isInCenterOfBlock())
+                return;
+            Utils.addCustomLog("Changing back");
+            currentState = BlockUtils.isWalkable(BlockUtils.getLeftBlock()) ? State.LEFT : State.RIGHT;
             return;
         }
-
-        Utils.addCustomLog("brbrbrbr" + blockLagged() + ", " + blockLaggedFlip());
-
-        if ((currentState == State.RIGHT || currentState == State.LEFT) && !lagged && blockLagged()) {
-            Utils.addCustomLog("lagstart");
-
-            if (currentState == State.RIGHT) {
-                currentState = State.LEFT;
-            } else {
-                currentState = State.RIGHT;
-            }
-            lagCooldown.schedule(300);
-            lagged = true;
+        if((!BlockUtils.isWalkable(BlockUtils.getLeftBlock()) || !BlockUtils.isWalkable(BlockUtils.getRightBlock())) &&
+                (blockInPos.getX() != targetBlockPos.getX() || blockInPos.getZ() != targetBlockPos.getZ()) &&
+                Math.round(Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX) * 100.0) / 100.0 == 0 && Math.round(Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) * 100.0) / 100.0 == 0){
+            currentState = State.SWITCH;
+            targetBlockPos = calculateTargetBlockPos();
             return;
         }
-
-        if ((currentState == State.RIGHT || currentState == State.LEFT) && lagged && !blockLaggedFlip() && lagCooldown.passed()) {
-            Utils.addCustomLog("lagend");
-
-            if (currentState == State.RIGHT) {
-                currentState = State.LEFT;
-            } else {
-                currentState = State.RIGHT;
-            }
-            lagged = false;
-            return;
-        }
-
-        if (BlockUtils.getBlockAround(-1, 0, 0).equals(Blocks.dirt) && BlockUtils.getBlockAround(1, 0, 0).equals(Blocks.dirt)) {
-            currentState = State.FORWARDS;
-        } else if (BlockUtils.getBlockAround(-1, 0, 0).equals(Blocks.dirt)) {
-            if (BlockUtils.getBlockAround(1, -1, 0).equals(Blocks.dirt)) {
-                if (currentState == State.EDGE_RIGHT || currentState == State.RIGHT) {
-                    currentState = State.RIGHT;
-                } else if (currentState != State.LEFT && !switching) {
-                    rotation.easeTo(AngleUtils.parallelToC1(), 89, 600);
-                    currentState = State.EDGE_RIGHT;
-                    mc.thePlayer.inventory.currentItem = 6;
-                    aote = true;
-                    pitch = mc.thePlayer.rotationPitch;
-                } else {
-                    switching = true;
-                    currentState = State.FORWARDS;
-                }
-            } else {
-                currentState = State.FORWARDS;
-                switching = false;
-            }
-        } else if (BlockUtils.getBlockAround(1, 0, 0).equals(Blocks.dirt)) {
-            if (BlockUtils.getBlockAround(-1, -1, 0).equals(Blocks.dirt)) {
-                if (currentState == State.EDGE_LEFT || currentState == State.LEFT) {
-                    currentState = State.LEFT;
-                } else if (currentState != State.RIGHT && !switching) {
-                    rotation.easeTo(AngleUtils.parallelToC1(), 89, 600);
-                    currentState = State.EDGE_LEFT;
-                    mc.thePlayer.inventory.currentItem = 6;
-                    aote = true;
-                    pitch = mc.thePlayer.rotationPitch;
-                } else {
-                    switching = true;
-                    currentState = State.FORWARDS;
-                }
-            } else {
-                currentState = State.FORWARDS;
-                switching = false;
-            }
-        } else {
-            if (currentState != State.LEFT && currentState != State.RIGHT) {
-                currentState = State.RIGHT;
-            }
+        if (lastState != currentState || currentState == State.NONE) {
+            currentState = calculateDirection();
+            rotation.reset();
         }
     }
 
@@ -260,7 +237,7 @@ public class PlaceSC extends ProcessModule {
                     Thread.sleep(500);
                 }
                 mc.thePlayer.closeScreen();
-                currentState = State.NONE;
+                refillingSc = false;
                 Utils.addCustomLog("Finished moving sugarcane to hotbar");
 
             } catch (Exception e) {
@@ -290,7 +267,7 @@ public class PlaceSC extends ProcessModule {
                     Thread.sleep(1000);
                     mc.thePlayer.closeScreen();
                     Thread.sleep(500);
-                    currentState = State.NONE;
+                    refillingSc = false;
                     Utils.addCustomLog("Finished buying sugarcane from bazaar");
 
                 } else {
@@ -303,28 +280,78 @@ public class PlaceSC extends ProcessModule {
 
         }
     };
+    BlockPos calculateTargetBlockPos(){
+
+        if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getLeftBlock())){
+            if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())){
+                return BlockUtils.getBlockPosAround(0, 1, 0);
+            } else {
+                if(!BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 1, 0)) && !BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 1, 0))) {
+                    Utils.addCustomLog("BlockPos : +2");
+                    return BlockUtils.getBlockPosAround(0, 2, 0);
+                }
+                else {
+                    Utils.addCustomLog("BlockPos : +3");
+                    return BlockUtils.getBlockPosAround(0, 3, 0);
+                }
+
+            }
+        }
+        Utils.addCustomLog("Can't calculate block pos");
+        return new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+    }
+    int calculateInitWalk(){
+        for(int i = 0; i < 5; i++){
+            if(BlockUtils.isWalkable(BlockUtils.getBlockAround(1, i, 0)) || BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, i, 0)))
+                return i;
+        }
+        return 0;
+    }
+
+    State calculateDirection() {
+        ArrayList<Integer> unwalkableBlocks = new ArrayList<>();
+        if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)).getBlock().equals(Blocks.end_portal_frame)) {
+            for (int i = -3; i < 3; i++) {
+                if (!BlockUtils.isWalkable(BlockUtils.getBlockAround(i, 0, 1))) {
+                    unwalkableBlocks.add(i);
+                }
+            }
+        } else {
+            for (int i = -3; i < 3; i++) {
+                if (!BlockUtils.isWalkable(BlockUtils.getBlockAround(i, 0, 0))) {
+                    unwalkableBlocks.add(i);
+                }
+            }
+        }
+
+        if (unwalkableBlocks.size() == 0)
+            return State.RIGHT;
+        else if (unwalkableBlocks.get(0) > 0)
+            return State.LEFT;
+        else
+            return State.RIGHT;
+    }
 
     boolean blockLagged() {
         if (currentState == State.RIGHT) {
             return !(sugarcaneIsPresent(-3, 1)) || !(sugarcaneIsPresent(-3, 0)) ||
               !(sugarcaneIsPresent(-2, 1)) || !(sugarcaneIsPresent(-2, 0)) ||
               !(sugarcaneIsPresent(-1, 1)) || !(sugarcaneIsPresent(-1, 0));
-        } else {
+        } else if(currentState == State.LEFT){
             return !(sugarcaneIsPresent(3, 1)) || !(sugarcaneIsPresent(3, 0)) ||
               !(sugarcaneIsPresent(2, 1)) || !(sugarcaneIsPresent(2, 0)) ||
               !(sugarcaneIsPresent(1, 1)) || !(sugarcaneIsPresent(1, 0));
-        }
+        } else
+            return false;
     }
 
     boolean blockLaggedFlip() {
-        if (currentState == State.LEFT) {
+        if(currentState == State.RIGHT) {
             return !(sugarcaneIsPresent(-3, 1)) || !(sugarcaneIsPresent(-3, 0)) ||
-              !(sugarcaneIsPresent(-2, 1)) || !(sugarcaneIsPresent(-2, 0)) ||
-              !(sugarcaneIsPresent(-1, 1)) || !(sugarcaneIsPresent(-1, 0));
+                    !(sugarcaneIsPresent(-2, 1)) || !(sugarcaneIsPresent(-2, 1));
         } else {
             return !(sugarcaneIsPresent(3, 1)) || !(sugarcaneIsPresent(3, 0)) ||
-              !(sugarcaneIsPresent(2, 1)) || !(sugarcaneIsPresent(2, 0)) ||
-              !(sugarcaneIsPresent(1, 1)) || !(sugarcaneIsPresent(1, 0));
+                    !(sugarcaneIsPresent(2, 1)) || !(sugarcaneIsPresent(2, 0));
         }
     }
 
@@ -354,5 +381,10 @@ public class PlaceSC extends ProcessModule {
             updateKeys(false, false, false, false, false, false, false);
             throw new Exception();
         }
+    }
+    public static boolean isInCenterOfBlock(){
+        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ?Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
+                Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
+
     }
 }
