@@ -43,14 +43,17 @@ public class KeyBindHelper {
 
     public static void onKeyPress(InputEvent.KeyInputEvent event) {
 
+
         if (customKeyBinds[0].isKeyDown()) {
             if (setmode == 0) {
                 BuilderState.setCorner1((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
             } else {
                 BuilderState.setCorner2((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
             }
+
             setmode = 1 - setmode;
             return;
+
         }
 
         if (customKeyBinds[6].isKeyDown()) {

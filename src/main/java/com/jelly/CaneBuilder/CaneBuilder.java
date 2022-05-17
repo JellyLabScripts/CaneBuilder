@@ -27,6 +27,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import scala.swing.event.KeyPressed;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -63,7 +64,6 @@ public class CaneBuilder {
         }
         System.out.println("Registering");
         MinecraftForge.EVENT_BUS.register(new CaneBuilder());
-        FMLCommonHandler.instance().bus().register(new CaneBuilder());
         ClientCommandHandler.instance.registerCommand(new SetDirection());
         ClientCommandHandler.instance.registerCommand(new Corner1());
         ClientCommandHandler.instance.registerCommand(new Corner2());
