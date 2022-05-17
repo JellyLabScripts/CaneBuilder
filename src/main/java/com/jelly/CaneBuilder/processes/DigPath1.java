@@ -29,6 +29,7 @@ public class DigPath1 extends ProcessModule {
     boolean aote = false;
     float pitch;
     int current = 0;
+    BlockPos lastBroken;
     Clock teleportWait = new Clock();
 
     @Override
@@ -127,10 +128,16 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                boolean shouldDig = mc.objectMouseOver != null && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY() &&
-                  !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.air);
+                boolean shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
+                  (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.dirt) || BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 3, 0).equals(Blocks.dirt)) &&
+                  (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
-                updateKeys(true, false, false, false, shouldDig);
+                updateKeys(true, false, false, false, false, false, false);
+                if (shouldDig) {
+                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    lastBroken = mc.objectMouseOver.getBlockPos();
+                    onTick(keybindAttack);
+                }
                 return;
 
             case WALK_BACK:
@@ -169,10 +176,16 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                shouldDig = mc.objectMouseOver != null && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY() &&
-                  !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.air);
+                shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
+                  (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.dirt) || BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.dirt)) &&
+                  (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
-                updateKeys(true, false, false, false, shouldDig);
+                updateKeys(true, false, false, false, false);
+                if (shouldDig) {
+                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    lastBroken = mc.objectMouseOver.getBlockPos();
+                    onTick(keybindAttack);
+                }
                 return;
 
             case PREP_INNER:
@@ -210,12 +223,18 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                shouldDig = mc.objectMouseOver != null && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY() &&
+                shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
                   (!BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.air) ||
                     (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.air) &&
-                      !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.air)));
+                      !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.air))) &&
+                  (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
-                updateKeys(true, false, false, false, shouldDig);
+                updateKeys(true, false, false, false, false);
+                if (shouldDig) {
+                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    lastBroken = mc.objectMouseOver.getBlockPos();
+                    onTick(keybindAttack);
+                }
                 return;
 
             case WALK_BACK_MAIN:
@@ -244,6 +263,7 @@ public class DigPath1 extends ProcessModule {
         currentState = State.TELEPORTING;
         aote = false;
         current = 0;
+        lastBroken = null;
         teleportWait.schedule(2000);
     }
 

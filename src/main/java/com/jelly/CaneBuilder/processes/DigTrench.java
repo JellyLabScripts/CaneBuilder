@@ -12,6 +12,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.BlockPos;
 
 public class DigTrench extends ProcessModule {
     enum State {
@@ -26,6 +27,7 @@ public class DigTrench extends ProcessModule {
     float pitch;
     State currentState;
     Clock jumpCooldown = new Clock();
+    BlockPos lastBroken;
 
     @Override
     public void onTick() {
@@ -99,7 +101,7 @@ public class DigTrench extends ProcessModule {
                     }
                 } else {
                     resetKeybindState();
-                    rotation.easeTo(AngleUtils.getClosest(), 20, 500);
+                    rotation.easeTo(AngleUtils.getClosest(), 30, 500);
                     currentState = State.FULL_DIG;
                 }
                 return;
@@ -115,9 +117,15 @@ public class DigTrench extends ProcessModule {
                 }
 
                 boolean shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 1 == mc.objectMouseOver.getBlockPos().getY() &&
-                  !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.air);
+                  (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.dirt) || BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 3, 0).equals(Blocks.dirt)) &&
+                  (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
-                updateKeys(true, false, false, false, shouldDig);
+                updateKeys(true, false, false, false, false);
+                if (shouldDig) {
+                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    lastBroken = mc.objectMouseOver.getBlockPos();
+                    onTick(keybindAttack);
+                }
                 return;
 
             case JUMP_OUT:
@@ -158,6 +166,7 @@ public class DigTrench extends ProcessModule {
         resetKeybindState();
         currentState = State.START;
         aote = false;
+        lastBroken = null;
         rotation.easeTo(AngleUtils.getClosest(), 60, 1000);
     }
 

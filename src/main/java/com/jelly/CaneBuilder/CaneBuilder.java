@@ -17,10 +17,12 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -61,6 +63,7 @@ public class CaneBuilder {
         }
         System.out.println("Registering");
         MinecraftForge.EVENT_BUS.register(new CaneBuilder());
+        FMLCommonHandler.instance().bus().register(new CaneBuilder());
         ClientCommandHandler.instance.registerCommand(new SetDirection());
         ClientCommandHandler.instance.registerCommand(new Corner1());
         ClientCommandHandler.instance.registerCommand(new Corner2());
@@ -104,6 +107,19 @@ public class CaneBuilder {
                 process.onRenderWorld();
             }
         }
+    }
+
+    @SubscribeEvent
+    public void onLeave(PlayerEvent.PlayerLoggedOutEvent event) {
+        System.out.println("Detecting leave, disabling");
+        System.out.println("Detecting leave, disabling");
+        for (ProcessModule process : processes) {
+            if (process.isEnabled()) {
+                process.toggle();
+                process.onDisable();
+            }
+        }
+        disableScript();
     }
 
     @SideOnly(Side.CLIENT)

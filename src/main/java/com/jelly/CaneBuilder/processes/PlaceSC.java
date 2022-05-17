@@ -14,6 +14,7 @@ import net.minecraft.util.EnumChatFormatting;
 import scala.concurrent.Await;
 
 import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 public class PlaceSC extends ProcessModule {
     boolean refillingSc;
@@ -26,7 +27,7 @@ public class PlaceSC extends ProcessModule {
     State currentState;
     State lastState;
 
-    enum State{
+    enum State {
         START,
         RIGHT,
         LEFT,
@@ -34,7 +35,7 @@ public class PlaceSC extends ProcessModule {
         SWITCH,
         NONE
     }
-    
+
 
     @Override
     public void onTick() {
@@ -42,24 +43,24 @@ public class PlaceSC extends ProcessModule {
             resetKeybindState();
             return;
         }
-        if(currentState == State.START)
+        if (currentState == State.START)
             return;
 
-        if(blockLagged() && !lagged){
+        if (blockLagged() && !lagged) {
             Utils.addCustomLog("Detected lag");
             lagged = true;
             lagCooldown.schedule(700);
         }
-        if(lagged){
+        if (lagged) {
             Utils.addCustomLog("Lagging");
-           if(lagCooldown.passed()) {
-               targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
-               lagged = false;
-           }
+            if (lagCooldown.passed()) {
+                targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+                lagged = false;
+            }
             updateKeys(false, false, currentState == State.RIGHT, currentState == State.LEFT, false, true, false);
             return;
         }
-        if(!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
+        if (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
             refillingSc = true;
             updateKeys(false, false, false, false, false, false, false);
             ExecuteRunnable(RefillSc);
@@ -143,7 +144,7 @@ public class PlaceSC extends ProcessModule {
                 mc.thePlayer.closeScreen();
                 threadSleep(500);
                 rotation.easeTo(AngleUtils.parallelToC1(), 89f, 1000);
-                while(rotation.rotating)
+                while (rotation.rotating)
                     threadSleep(1);
                 Utils.goToRelativeBlock(0, calculateInitWalk());
                 threadSleep(500);
@@ -176,20 +177,20 @@ public class PlaceSC extends ProcessModule {
 
     private void updateState() {
         BlockPos blockInPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
-        if(lastState == State.SWITCH){
+        if (lastState == State.SWITCH) {
             currentState = State.FORWARD;
             return;
         }
-        if(lastState == State.FORWARD){
-            if(blockInPos.getX() != targetBlockPos.getX() || blockInPos.getZ() != targetBlockPos.getZ() || !isInCenterOfBlock())
+        if (lastState == State.FORWARD) {
+            if (blockInPos.getX() != targetBlockPos.getX() || blockInPos.getZ() != targetBlockPos.getZ() || !isInCenterOfBlock())
                 return;
             Utils.addCustomLog("Changing back");
             currentState = BlockUtils.isWalkable(BlockUtils.getLeftBlock()) ? State.LEFT : State.RIGHT;
             return;
         }
-        if((!BlockUtils.isWalkable(BlockUtils.getLeftBlock()) || !BlockUtils.isWalkable(BlockUtils.getRightBlock())) &&
-                (blockInPos.getX() != targetBlockPos.getX() || blockInPos.getZ() != targetBlockPos.getZ()) &&
-                Math.round(Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX) * 100.0) / 100.0 == 0 && Math.round(Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) * 100.0) / 100.0 == 0){
+        if ((!BlockUtils.isWalkable(BlockUtils.getLeftBlock()) || !BlockUtils.isWalkable(BlockUtils.getRightBlock())) &&
+          (blockInPos.getX() != targetBlockPos.getX() || blockInPos.getZ() != targetBlockPos.getZ()) &&
+          Math.round(Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX) * 100.0) / 100.0 == 0 && Math.round(Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) * 100.0) / 100.0 == 0) {
             currentState = State.SWITCH;
             targetBlockPos = calculateTargetBlockPos();
             return;
@@ -279,17 +280,17 @@ public class PlaceSC extends ProcessModule {
 
         }
     };
-    BlockPos calculateTargetBlockPos(){
 
-        if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getLeftBlock())){
-            if(!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())){
+    BlockPos calculateTargetBlockPos() {
+
+        if (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) {
+            if (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) && !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) {
                 return BlockUtils.getBlockPosAround(0, 1, 0);
             } else {
-                if(!BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 1, 0)) && !BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 1, 0))) {
+                if (!BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 1, 0)) && !BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 1, 0))) {
                     Utils.addCustomLog("BlockPos : +2");
                     return BlockUtils.getBlockPosAround(0, 2, 0);
-                }
-                else {
+                } else {
                     Utils.addCustomLog("BlockPos : +3");
                     return BlockUtils.getBlockPosAround(0, 3, 0);
                 }
@@ -299,9 +300,10 @@ public class PlaceSC extends ProcessModule {
         Utils.addCustomLog("Can't calculate block pos");
         return new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
     }
-    int calculateInitWalk(){
-        for(int i = 0; i < 5; i++){
-            if(BlockUtils.isWalkable(BlockUtils.getBlockAround(1, i, 0)) || BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, i, 0)))
+
+    int calculateInitWalk() {
+        for (int i = 0; i < 5; i++) {
+            if (BlockUtils.isWalkable(BlockUtils.getBlockAround(1, i, 0)) || BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, i, 0)))
                 return i;
         }
         return 0;
@@ -333,25 +335,11 @@ public class PlaceSC extends ProcessModule {
 
     boolean blockLagged() {
         if (currentState == State.RIGHT) {
-            return !(sugarcaneIsPresent(-3, 1)) || !(sugarcaneIsPresent(-3, 0)) ||
-              !(sugarcaneIsPresent(-2, 1)) || !(sugarcaneIsPresent(-2, 0)) ||
-              !(sugarcaneIsPresent(-1, 1)) || !(sugarcaneIsPresent(-1, 0));
-        } else if(currentState == State.LEFT){
-            return !(sugarcaneIsPresent(3, 1)) || !(sugarcaneIsPresent(3, 0)) ||
-              !(sugarcaneIsPresent(2, 1)) || !(sugarcaneIsPresent(2, 0)) ||
-              !(sugarcaneIsPresent(1, 1)) || !(sugarcaneIsPresent(1, 0));
+            return IntStream.rangeClosed(-8, -1).anyMatch(i -> !sugarcaneIsPresent(i, 0) || !sugarcaneIsPresent(i, 1));
+        } else if (currentState == State.LEFT) {
+            return IntStream.rangeClosed(1, 8).anyMatch(i -> !sugarcaneIsPresent(i, 0) || !sugarcaneIsPresent(i, 1));
         } else
             return false;
-    }
-
-    boolean blockLaggedFlip() {
-        if(currentState == State.RIGHT) {
-            return !(sugarcaneIsPresent(-3, 1)) || !(sugarcaneIsPresent(-3, 0)) ||
-                    !(sugarcaneIsPresent(-2, 1)) || !(sugarcaneIsPresent(-2, 1));
-        } else {
-            return !(sugarcaneIsPresent(3, 1)) || !(sugarcaneIsPresent(3, 0)) ||
-                    !(sugarcaneIsPresent(2, 1)) || !(sugarcaneIsPresent(2, 0));
-        }
     }
 
     boolean sugarcaneIsPresent(int rightOffset, int frontOffset) {
@@ -381,9 +369,10 @@ public class PlaceSC extends ProcessModule {
             throw new Exception();
         }
     }
-    public static boolean isInCenterOfBlock(){
-        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ?Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
-                Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
+
+    public static boolean isInCenterOfBlock() {
+        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
+          Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
 
     }
 }
