@@ -21,7 +21,7 @@ public class FillTrench extends ProcessModule {
     boolean aote;
     float pitch;
     State currentState;
-    Clock jumpCooldown = new Clock();
+    Clock rotateCooldown = new Clock();
     boolean done = false;
     Clock wait = new Clock();
 
@@ -85,10 +85,8 @@ public class FillTrench extends ProcessModule {
                 } else if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.prismarine)) {
                     resetKeybindState();
                     rotation.easeTo(AngleUtils.getClosest() - 13, 42, 500);
-                    mc.thePlayer.inventory.currentItem = 4;
                     currentState = State.PLACE_WATER;
-                } else {
-                    Utils.addCustomMessage("Placed wrong block possibly, stuck - end script");
+                    rotateCooldown.schedule(2000);
                 }
                 return;
 
@@ -99,8 +97,10 @@ public class FillTrench extends ProcessModule {
                     mc.thePlayer.inventory.currentItem = 5;
                     currentState = State.BREAK_PUMP;
                 } else {
+                    Utils.addCustomLog("Placing water");
                     mc.thePlayer.inventory.currentItem = 4;
-                    onTick(keybindUseItem);
+                    if(rotation.completed && rotateCooldown.passed())
+                    setKeyBindState(keybindUseItem, true);
                 }
                 return;
 
