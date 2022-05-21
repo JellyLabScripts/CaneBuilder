@@ -18,7 +18,6 @@ public class FillTrench extends ProcessModule {
         WALK_NEXT
     }
 
-
     boolean aote;
     float pitch;
     State currentState;
