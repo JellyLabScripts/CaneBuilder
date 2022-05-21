@@ -1,10 +1,15 @@
 package com.jelly.CaneBuilder.processes;
 
+import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.ThreadManager;
 import com.jelly.CaneBuilder.utils.Rotation;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -42,17 +47,8 @@ public abstract class ProcessModule {
             e.printStackTrace();
         }
     }
-
-    protected void ScheduleRunnable(Runnable r, int delay, TimeUnit tu) {
-        ScheduledExecutorService eTemp = Executors.newScheduledThreadPool(1);
-        eTemp.schedule(r, delay, tu);
-        eTemp.shutdown();
-    }
-
-    protected void ExecuteRunnable(Runnable r) {
-        ScheduledExecutorService eTemp = Executors.newScheduledThreadPool(1);
-        eTemp.execute(r);
-        eTemp.shutdown();
+    protected void ExecuteRunnable(Thread t) {
+        ThreadManager.executeThread(t);
     }
 
     protected void onTick(int keyCode) {
@@ -60,4 +56,5 @@ public abstract class ProcessModule {
             KeyBinding.onTick(keyCode);
         }
     }
+
 }

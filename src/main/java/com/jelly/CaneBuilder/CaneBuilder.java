@@ -12,12 +12,9 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MouseHelper;
 import net.minecraftforge.client.ClientCommandHandler;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -26,16 +23,11 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import scala.swing.event.KeyPressed;
 
-import java.io.File;
-import java.lang.reflect.Field;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /*
  ** @author JellyLab, Polycrylate
@@ -49,11 +41,6 @@ public class CaneBuilder {
 
     public static List<ProcessModule> processes = new ArrayList<>();
     public static Minecraft mc = Minecraft.getMinecraft();
-
-    static boolean inFailsafe;
-    static boolean error;
-
-    MouseHelper mouseHelper = new MouseHelper();
 
     @Mod.EventHandler
     public static void init(FMLInitializationEvent event) {
@@ -141,27 +128,9 @@ public class CaneBuilder {
         }
     }
 
-    @SubscribeEvent
-    public void onMessageReceived(ClientChatReceivedEvent event) {
-        if (event.message.getFormattedText().contains("You were spawned in Limbo") && !inFailsafe && BuilderState.enabled) {
-            activateFailsafe();
-            ScheduleRunnable(LeaveSBIsland, 8, TimeUnit.SECONDS);
-        }
-        if ((event.message.getFormattedText().contains("Sending to server") && !inFailsafe && BuilderState.enabled)) {
-            activateFailsafe();
-            ScheduleRunnable(WarpHome, 10, TimeUnit.SECONDS);
-        }
-        if ((event.message.getFormattedText().contains("DYNAMIC") || (event.message.getFormattedText().contains("Couldn't warp you")) && inFailsafe)) {
-            error = true;
-        }
-        if ((event.message.getFormattedText().contains("SkyBlock Lobby") && !inFailsafe && BuilderState.enabled)) {
-            activateFailsafe();
-            ScheduleRunnable(LeaveSBIsland, 10, TimeUnit.SECONDS);
-        }
-    }
-
     public static void switchToNextProcess(ProcessModule currentModule) {
         Utils.addCustomLog("Switching processes");
+        ThreadManager.stopExistingThreads();
         KeyBindHelper.updateKeys(false, false, false, false, false, false, false);
         for (int i = 0; i < processes.size(); i++) {
             if (processes.get(i).equals(currentModule)) {
@@ -178,97 +147,42 @@ public class CaneBuilder {
         }
     }
 
-    Runnable LeaveSBIsland = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/l");
-            ScheduleRunnable(Rejoin, 5, TimeUnit.SECONDS);
-        }
-    };
+    public static void startScript(ProcessModule processModule){
 
-    Runnable WarpHub = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/warp hub");
-            ScheduleRunnable(WarpHome, 5, TimeUnit.SECONDS);
-        }
-    };
+        ThreadManager.executeThread(new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+                Thread.sleep(500);
+                // mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                // threadSleep(500);
 
-    Runnable Rejoin = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/play sb");
-            ScheduleRunnable(WarpHome, 5, TimeUnit.SECONDS);
-        }
-    };
-
-    Runnable WarpHome = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/warp home");
-            ScheduleRunnable(afterRejoin1, 3, TimeUnit.SECONDS);
-        }
-    };
-
-
-    Runnable afterRejoin1 = new Runnable() {
-        @Override
-        public void run() {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-            if (!error) {
-                ScheduleRunnable(afterRejoin2, 1, TimeUnit.SECONDS);
-            } else {
-                Utils.addCustomLog("Error detected. Waiting 20 seconds");
-                ScheduleRunnable(WarpHome, 20, TimeUnit.SECONDS);
-                error = false;
+                Robot r = new Robot();
+                r.keyPress(KeyEvent.VK_3);
+                r.keyRelease(KeyEvent.VK_3);
+                mc.thePlayer.closeScreen();
+                processModule.toggle();
+                processModule.onEnable();
+                BuilderState.enabled = true;
+            } catch(Exception e){
+                disableScript();
             }
-        }
-    };
+        }));
 
-    Runnable afterRejoin2 = () -> {
-        KeyBinding.setKeyBindState(KeyBindHelper.keyBindShift, false);
-        mc.inGameHasFocus = true;
-        mouseHelper.grabMouseCursor();
-        mc.displayGuiScreen(null);
-        Field f;
-        f = FieldUtils.getDeclaredField(mc.getClass(), "leftClickCounter", true);
-        try {
-            f.set(mc, 10000);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        initVar();
-        inFailsafe = false;
-        BuilderState.enabled = true;
-    };
-
-
-    void ScheduleRunnable(Runnable r, int delay, TimeUnit tu) {
-        ScheduledExecutorService eTemp = Executors.newScheduledThreadPool(1);
-        eTemp.schedule(r, delay, tu);
-        eTemp.shutdown();
     }
 
-    void initVar() {
-        inFailsafe = false;
-    }
 
     public static void disableScript() {
         BuilderState.enabled = false;
         Utils.addCustomMessage("Disabling script", EnumChatFormatting.RED);
         KeyBindHelper.resetKeybindState();
+        ThreadManager.stopExistingThreads();
         for (ProcessModule process : processes) {
             if (process.isEnabled()) {
                 process.onDisable();
                 process.toggle();
             }
         }
-    }
-
-    public static void activateFailsafe() {
-        inFailsafe = true;
-        BuilderState.enabled = false;
-        KeyBindHelper.updateKeys(false, false, false, false, false, false, false);
     }
 }
 

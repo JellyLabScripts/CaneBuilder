@@ -1,6 +1,7 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.ThreadManager;
 import com.jelly.CaneBuilder.utils.*;
 
 import static com.jelly.CaneBuilder.KeyBindHelper.*;
@@ -102,12 +103,14 @@ public class PlaceSC extends ProcessModule {
 
     @Override
     public void onEnable() {
+        ThreadManager.executeThread(RefillSc);
         canePlaceLag = false;
         refillingSc = false;
         lagged = false;
         switching = false;
         currentState = State.START;
-        new Thread(() -> {
+
+        ThreadManager.executeThread(new Thread(() -> {
             try {
                 threadSleep(500);
                 mc.thePlayer.inventory.currentItem = 8;
@@ -162,13 +165,14 @@ public class PlaceSC extends ProcessModule {
                 currentState = State.NONE;
                 targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
             } catch (Exception e) {
-                e.printStackTrace();
+                CaneBuilder.disableScript();
             }
-        }).start();
+        }));
         resetKeybindState();
 
-        // rotation.easeTo(AngleUtils.parallelToC2(), 11.5f, 1000);
     }
+
+
 
     @Override
     public void onDisable() {
@@ -201,86 +205,59 @@ public class PlaceSC extends ProcessModule {
         }
     }
 
-    Runnable RefillSc = new Runnable() {
+    Thread RefillSc = new Thread() {
         @Override
         public void run() {
 
             try {
                 updateKeys(false, false, false, false, false, false, false);
                 if (!Utils.hasSugarcaneInInv()) {
-                    ExecuteRunnable(BuySugarcane);
+                    Utils.addCustomLog("Buying sugarcane from bazaar");
+                    mc.thePlayer.sendChatMessage("/bz");
+                    Thread.sleep(1000);
+                    if ((mc.thePlayer.openContainer instanceof ContainerChest)) {
+                        clickWindow(mc.thePlayer.openContainer.windowId, 0, 0, 0);
+                        Thread.sleep(1000);
+                        clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
+                        Thread.sleep(1000);
+                        clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
+                        Thread.sleep(1000);
+                        clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
+                        Thread.sleep(1000);
+                        clickWindow(mc.thePlayer.openContainer.windowId, 14, 0, 0);
+                        Thread.sleep(1000);
+                        mc.thePlayer.closeScreen();
+                        Thread.sleep(500);
+                        refillingSc = false;
+                        Utils.addCustomLog("Finished buying sugarcane from bazaar");
+
+                    } else {
+                        Utils.addCustomLog("Didn't open bazaar. Disabling script");
+                    }
                 } else if (!Utils.hasSugarcaneInHotbar()) {
-                    ExecuteRunnable(PutScToHotbar);
+                    Utils.addCustomLog("Preparing to move sugarcane to hotbar");
+                    Thread.sleep(1000);
+                    if (mc.currentScreen == null)
+                        mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                    else
+                        return;
+                    Thread.sleep(1000);
+
+                    while (!Utils.isHotbarFull() && Utils.hasSugarcaneInMainInv()) {
+                        clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithSugarcane(), 0, 1);
+                        Thread.sleep(500);
+                    }
+                    mc.thePlayer.closeScreen();
+                    refillingSc = false;
+                    Utils.addCustomLog("Finished moving sugarcane to hotbar");
                 } else {
                     Utils.addCustomLog("Unknown case, disabling script");
                 }
             } catch (Exception e) {
-
+                CaneBuilder.disableScript();
             }
         }
     };
-
-    Runnable PutScToHotbar = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                Utils.addCustomLog("Preparing to move sugarcane to hotbar");
-                Thread.sleep(1000);
-                if (mc.currentScreen == null)
-                    mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                else
-                    return;
-                Thread.sleep(1000);
-
-                while (!Utils.isHotbarFull() && Utils.hasSugarcaneInMainInv()) {
-                    clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithSugarcane(), 0, 1);
-                    Thread.sleep(500);
-                }
-                mc.thePlayer.closeScreen();
-                refillingSc = false;
-                Utils.addCustomLog("Finished moving sugarcane to hotbar");
-
-            } catch (Exception e) {
-            }
-        }
-    };
-
-    Runnable BuySugarcane = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                if (!enabled) return;
-
-                Utils.addCustomLog("Buying sugarcane from bazaar");
-                mc.thePlayer.sendChatMessage("/bz");
-                Thread.sleep(1000);
-                if ((mc.thePlayer.openContainer instanceof ContainerChest)) {
-                    clickWindow(mc.thePlayer.openContainer.windowId, 0, 0, 0);
-                    Thread.sleep(1000);
-                    clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
-                    Thread.sleep(1000);
-                    clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
-                    Thread.sleep(1000);
-                    clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
-                    Thread.sleep(1000);
-                    clickWindow(mc.thePlayer.openContainer.windowId, 14, 0, 0);
-                    Thread.sleep(1000);
-                    mc.thePlayer.closeScreen();
-                    Thread.sleep(500);
-                    refillingSc = false;
-                    Utils.addCustomLog("Finished buying sugarcane from bazaar");
-
-                } else {
-                    Utils.addCustomLog("Didn't open bazaar. Disabling script");
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-    };
-
     BlockPos calculateTargetBlockPos() {
 
         if (!BlockUtils.isWalkable(BlockUtils.getRightBlock()) || !BlockUtils.isWalkable(BlockUtils.getLeftBlock())) {

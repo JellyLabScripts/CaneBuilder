@@ -64,6 +64,7 @@ public class KeyBindHelper {
                 }
             }
             CaneBuilder.disableScript();
+            ThreadManager.stopExistingThreads();
             return;
         }
 
@@ -78,9 +79,7 @@ public class KeyBindHelper {
                 if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
                     for (ProcessModule process : CaneBuilder.processes) {
                         if (process instanceof PlaceDirt1) {
-                            process.toggle();
-                            process.onEnable();
-                            BuilderState.enabled = true;
+                            CaneBuilder.startScript(process);
                         }
                     }
                 } else {
@@ -94,9 +93,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Digging trench)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof DigTrench) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
@@ -106,9 +103,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Filling trench)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof FillTrench) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
@@ -118,9 +113,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Digging path)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof DigPath2) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
@@ -130,15 +123,15 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Placing sugarcane)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof PlaceSC) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
 
         }
     }
+
+
 
     public static void setKeyBindState(int keyCode, boolean pressed) {
         if (pressed) {

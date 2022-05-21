@@ -38,7 +38,6 @@ public class DigTrench extends ProcessModule {
 
         if (aote) {
             resetKeybindState();
-            // KeyBinding.onTick(keybindUseItem);
             setKeyBindState(keybindUseItem, true);
             if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
                 aote = false;
