@@ -7,7 +7,9 @@ import com.jelly.CaneBuilder.config.Config;
 import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MouseHelper;
@@ -26,6 +28,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,19 +156,37 @@ public class CaneBuilder {
         ThreadManager.executeThread(new Thread(() -> {
             try {
                 Thread.sleep(100);
+                //draft
                 KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
                 Thread.sleep(500);
+                Method m = ((GuiEditSign)mc.currentScreen).getClass().getDeclaredMethod("keyTyped", char.class, int.class);
+                m.setAccessible(true);
+                m.invoke(mc.currentScreen, 'a', 16);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, 'a', 16);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, 'a', 16);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '\n', 14);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '\r', 14);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '\n', 14);
+                Thread.sleep(500);
+
                 // mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
                 // threadSleep(500);
+                // Robot r = new Robot();
 
-                Robot r = new Robot();
-                r.keyPress(KeyEvent.VK_3);
-                r.keyRelease(KeyEvent.VK_3);
+                //r.keyPress(KeyEvent.VK_3);
+                Thread.sleep(500);
+                //r.keyRelease(KeyEvent.VK_3);
                 mc.thePlayer.closeScreen();
                 processModule.toggle();
                 processModule.onEnable();
                 BuilderState.enabled = true;
             } catch(Exception e){
+                e.printStackTrace();
                 disableScript();
             }
         }));
