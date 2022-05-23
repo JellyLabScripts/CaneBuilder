@@ -103,7 +103,6 @@ public class PlaceSC extends ProcessModule {
 
     @Override
     public void onEnable() {
-        ThreadManager.executeThread(RefillSc);
         canePlaceLag = false;
         refillingSc = false;
         lagged = false;
@@ -117,12 +116,10 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(100);
                 onTick(keybindUseItem);
                 threadSleep(800);
-
-                clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
-
+                Utils.clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
                 threadSleep(1000);
                 while (Utils.getFirstSlotWithDirt() != -1 && enabled) {
-                    clickWindow(mc.thePlayer.openContainer.windowId, 45 + Utils.getFirstSlotWithDirt(), 0, 0);
+                    Utils.clickWindow(mc.thePlayer.openContainer.windowId, 45 + Utils.getFirstSlotWithDirt(), 0, 0);
                     threadSleep(500);
                 }
                 threadSleep(500);
@@ -130,20 +127,11 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(500);
                 mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
                 threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 1);
-                threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 37, 0, 1);
-                threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 38, 0, 1);
-                threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 39, 0, 1);
-                threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 40, 0, 1);
-                threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 41, 0, 1);
-                threadSleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 43, 0, 1);
-                threadSleep(500);
+                for(int i = 36; i < 44; i ++){
+                    Utils.clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
+                    Thread.sleep(500);
+                }
+                Thread.sleep(500);
                 mc.thePlayer.closeScreen();
                 threadSleep(500);
                 rotation.easeTo(AngleUtils.parallelToC1(), 89f, 1000);
@@ -216,15 +204,15 @@ public class PlaceSC extends ProcessModule {
                     mc.thePlayer.sendChatMessage("/bz");
                     Thread.sleep(1000);
                     if ((mc.thePlayer.openContainer instanceof ContainerChest)) {
-                        clickWindow(mc.thePlayer.openContainer.windowId, 0, 0, 0);
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, 0, 0, 0);
                         Thread.sleep(1000);
-                        clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
                         Thread.sleep(1000);
-                        clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
                         Thread.sleep(1000);
-                        clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, 10, 0, 0);
                         Thread.sleep(1000);
-                        clickWindow(mc.thePlayer.openContainer.windowId, 14, 0, 0);
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, 14, 0, 0);
                         Thread.sleep(1000);
                         mc.thePlayer.closeScreen();
                         Thread.sleep(500);
@@ -244,7 +232,7 @@ public class PlaceSC extends ProcessModule {
                     Thread.sleep(1000);
 
                     while (!Utils.isHotbarFull() && Utils.hasSugarcaneInMainInv()) {
-                        clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithSugarcane(), 0, 1);
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithSugarcane(), 0, 1);
                         Thread.sleep(500);
                     }
                     mc.thePlayer.closeScreen();
@@ -336,16 +324,6 @@ public class PlaceSC extends ProcessModule {
         return BlockUtils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.water) || BlockUtils.getBlockAround(rightOffset, frontOffset, upOffset).equals(Blocks.flowing_water);
     }
 
-    void clickWindow(int windowID, int slotID, int mouseButtonClicked, int mode) throws Exception {
-        if (mc.thePlayer.openContainer instanceof ContainerChest || mc.currentScreen instanceof GuiInventory) {
-            mc.playerController.windowClick(windowID, slotID, mouseButtonClicked, mode, mc.thePlayer);
-            Utils.addCustomLog("Pressing slot : " + slotID);
-        } else {
-            Utils.addCustomMessage(EnumChatFormatting.RED + "Didn't open window! This shouldn't happen and the script has been disabled. Please immediately report to the developer.");
-            updateKeys(false, false, false, false, false, false, false);
-            throw new Exception();
-        }
-    }
 
     public static boolean isInCenterOfBlock() {
         return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :

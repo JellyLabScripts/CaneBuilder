@@ -1,21 +1,22 @@
 package com.jelly.CaneBuilder.utils;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MouseHelper;
-import org.lwjgl.input.Mouse;
+
+import static com.jelly.CaneBuilder.KeyBindHelper.*;
 
 import java.util.Random;
+
+import static com.jelly.CaneBuilder.KeyBindHelper.updateKeys;
 
 public class Utils {
 
@@ -28,9 +29,7 @@ public class Utils {
     protected static int keybindUseItem = mc.gameSettings.keyBindUseItem.getKeyCode();
     protected static int keyBindShift = mc.gameSettings.keyBindSneak.getKeyCode();
     protected static int keyBindJump = mc.gameSettings.keyBindJump.getKeyCode();
-    public static boolean isUngrabbed = false;
-    protected static boolean doesGameWantUngrabbed;
-    protected static MouseHelper oldMouseHelper;
+
 
     public enum location {
         ISLAND,
@@ -87,11 +86,6 @@ public class Utils {
         }
         return false;
     }
-
-    public static double roundTo2DecimalPlaces(double d) {
-        return Math.floor(d * 100) / 100;
-    }
-
     public static boolean hasSugarcaneInHotbar() {
         for (int i = 36; i < 45; i++) {
             if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
@@ -104,6 +98,19 @@ public class Utils {
             }
         }
         return false;
+    }
+    public static int getSlotNumberByDisplayName(String displayName) {
+        for (int i = 9; i < 45; i++) {
+            if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
+                try {
+                    if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i).getStack().getDisplayName().contains(displayName))
+                        return i;
+                } catch (Exception e) {
+
+                }
+            }
+        }
+        return 36;
     }
 
     public static boolean hasSugarcaneInMainInv() {
@@ -186,19 +193,6 @@ public class Utils {
         return -1;
 
     }
-
-    public static boolean isInCenterOfBlockForward() {
-        return (Math.round(AngleUtils.get360RotationYaw()) == 180 || Math.round(AngleUtils.get360RotationYaw()) == 0) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
-          Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
-
-    }
-
-    public static boolean isInCenterOfBlockSideways() {
-        return (Math.round(AngleUtils.get360RotationYaw()) == 90 || Math.round(AngleUtils.get360RotationYaw()) == 270) ? Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posZ) % 1 < 0.7f :
-          Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 > 0.3f && Math.abs(Minecraft.getMinecraft().thePlayer.posX) % 1 < 0.7f;
-
-    }
-
     public static synchronized void goToRelativeBlock(int rightOffset, int frontOffset) {
         try {
             setKeyBindState(keyBindShift, true);
@@ -221,54 +215,14 @@ public class Utils {
         }
     }
 
-    protected static void setKeyBindState(int keyCode, boolean pressed) {
-        if (pressed) {
-            if (mc.currentScreen != null) {
-                Utils.addCustomLog("In GUI, pausing");
-                KeyBinding.setKeyBindState(keyCode, false);
-                return;
-            }
-        }
-        KeyBinding.setKeyBindState(keyCode, pressed);
-    }
-
-    protected static void resetKeybindState() {
-        KeyBinding.setKeyBindState(keybindA, false);
-        KeyBinding.setKeyBindState(keybindS, false);
-        KeyBinding.setKeyBindState(keybindW, false);
-        KeyBinding.setKeyBindState(keybindD, false);
-        KeyBinding.setKeyBindState(keyBindShift, false);
-        KeyBinding.setKeyBindState(keyBindJump, false);
-        KeyBinding.setKeyBindState(keybindAttack, false);
-        KeyBinding.setKeyBindState(keybindUseItem, false);
-    }
-
-    public static void goToBlock(int x, int z) {
-        try {
-            double xdiff = x + 0.5 - mc.thePlayer.posX;
-            double zdiff = z + 0.5 - mc.thePlayer.posZ;
-            double distance = Math.sqrt(Math.pow(xdiff, 2) + Math.pow(zdiff, 2));
-            double speed = Math.sqrt((Math.pow(Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX), 2) + (Math.pow(Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ), 2))));
-            double targetYaw = AngleUtils.get360RotationYaw((float) Math.toDegrees(Math.atan2(-xdiff, zdiff)));
-
-            AngleUtils.smoothRotateTo((float) targetYaw, 2);
-            Thread.sleep(100);
-
-            while (Math.abs(distance) > 0.2) {
-                if (Thread.currentThread().isInterrupted()) throw new Exception("Detected interrupt - stopping");
-                xdiff = x + 0.5 - mc.thePlayer.posX;
-                zdiff = z + 0.5 - mc.thePlayer.posZ;
-                targetYaw = AngleUtils.get360RotationYaw((float) Math.toDegrees(Math.atan2(-xdiff, zdiff)));
-                if (1.4 * speed < distance) AngleUtils.hardRotate((float) targetYaw);
-                setKeyBindState(keybindW, true);
-                setKeyBindState(keyBindShift, 1.4 * speed >= distance);
-                distance = Math.sqrt(Math.pow((x + 0.5 - mc.thePlayer.posX), 2) + Math.pow((z + 0.5 - mc.thePlayer.posZ), 2));
-                speed = Math.sqrt((Math.pow(Math.abs(mc.thePlayer.posX - mc.thePlayer.lastTickPosX), 2) + (Math.pow(Math.abs(mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ), 2))));
-                Thread.sleep(20);
-            }
-            resetKeybindState();
-        } catch (Throwable e) {
-            e.printStackTrace();
+    public static void clickWindow(int windowID, int slotID, int mouseButtonClicked, int mode) throws Exception {
+        if (mc.thePlayer.openContainer instanceof ContainerChest || mc.currentScreen instanceof GuiInventory) {
+            mc.playerController.windowClick(windowID, slotID, mouseButtonClicked, mode, mc.thePlayer);
+            Utils.addCustomLog("Pressing slot : " + slotID);
+        } else {
+            Utils.addCustomMessage(EnumChatFormatting.RED + "Didn't open window! This shouldn't happen and the script has been disabled. Please immediately report to the developer.");
+            updateKeys(false, false, false, false, false, false, false);
+            throw new Exception();
         }
     }
 
@@ -295,38 +249,5 @@ public class Utils {
             return location.LOBBY;
         }
     }
-
-   /* public static void ungrabMouse() {
-        Minecraft m = Minecraft.getMinecraft();
-        if (isUngrabbed) return;
-        m.gameSettings.pauseOnLostFocus = false;
-        if (oldMouseHelper == null) oldMouseHelper = m.mouseHelper;
-        doesGameWantUngrabbed = !Mouse.isGrabbed();
-        oldMouseHelper.ungrabMouseCursor();
-        m.inGameHasFocus = true;
-        m.mouseHelper = new MouseHelper() {
-            @Override
-            public void mouseXYChange() {
-            }
-            @Override
-            public void grabMouseCursor() {
-                doesGameWantUngrabbed = false;
-            }
-            @Override
-            public void ungrabMouseCursor() {
-                doesGameWantUngrabbed = true;
-            }
-        };
-        isUngrabbed = true;
-    }
-
-    public static void regrabMouse() {
-        if (!isUngrabbed) return;
-        Minecraft m = Minecraft.getMinecraft();
-        m.mouseHelper = oldMouseHelper;
-        if (!doesGameWantUngrabbed) m.mouseHelper.grabMouseCursor();
-        oldMouseHelper = null;
-        isUngrabbed = false;
-    }*/
 
 }

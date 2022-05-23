@@ -7,12 +7,11 @@ import com.jelly.CaneBuilder.config.Config;
 import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiEditSign;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MouseHelper;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -26,12 +25,10 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import static com.jelly.CaneBuilder.utils.Utils.*;
 
 /*
  ** @author JellyLab, Polycrylate
@@ -45,6 +42,8 @@ public class CaneBuilder {
 
     public static List<ProcessModule> processes = new ArrayList<>();
     public static Minecraft mc = Minecraft.getMinecraft();
+
+    public static String[] requiredSlotsName = new String[]{"Builder", "Infini", "Shovel", "Prisma", "Magical", "Pickaxe", "Aspect", "Dirt"};
 
     @Mod.EventHandler
     public static void init(FMLInitializationEvent event) {
@@ -155,33 +154,56 @@ public class CaneBuilder {
 
         ThreadManager.executeThread(new Thread(() -> {
             try {
-                Thread.sleep(100);
-                //draft
-                KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+                Utils.addCustomLog("Setting Rancher's boot's speed");
                 Thread.sleep(500);
-                Method m = ((GuiEditSign)mc.currentScreen).getClass().getDeclaredMethod("keyTyped", char.class, int.class);
+                mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                Thread.sleep(500);
+                for(int i = 36; i < 44; i ++){
+                    clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
+                    Thread.sleep(500);
+                }
+                Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 8, 0, 0);
+                Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 0);
+                Thread.sleep(250);
+                mc.thePlayer.closeScreen();
+                Thread.sleep(250);
+                mc.thePlayer.inventory.currentItem = 0;
+                Thread.sleep(250);
+                KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
+                Thread.sleep(1000);
+                Method m = ((GuiEditSign)mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
+                Utils.addCustomLog(m.toString());
                 m.setAccessible(true);
-                m.invoke(mc.currentScreen, 'a', 16);
-                Thread.sleep(500);
-                m.invoke(mc.currentScreen, 'a', 16);
-                Thread.sleep(500);
-                m.invoke(mc.currentScreen, 'a', 16);
-                Thread.sleep(500);
-                m.invoke(mc.currentScreen, '\n', 14);
+                m.invoke(mc.currentScreen, '\r', 14);
                 Thread.sleep(500);
                 m.invoke(mc.currentScreen, '\r', 14);
                 Thread.sleep(500);
-                m.invoke(mc.currentScreen, '\n', 14);
+                m.invoke(mc.currentScreen, '\r', 14);
                 Thread.sleep(500);
-
-                // mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                // threadSleep(500);
-                // Robot r = new Robot();
-
-                //r.keyPress(KeyEvent.VK_3);
+                m.invoke(mc.currentScreen, '4', 16);
                 Thread.sleep(500);
-                //r.keyRelease(KeyEvent.VK_3);
+                m.invoke(mc.currentScreen, '0', 16);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '0', 16);
+                Thread.sleep(500);
+                Thread.sleep(500);
                 mc.thePlayer.closeScreen();
+                Thread.sleep(500);
+                KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+                Thread.sleep(500);
+                Utils.addCustomLog("Preparing inventory");
+                mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                Thread.sleep(500);
+
+                for(String s : requiredSlotsName) {
+                    clickWindow(mc.thePlayer.openContainer.windowId, Utils.getSlotNumberByDisplayName(s), 0, 1);
+                    Thread.sleep(500);
+                }
+                mc.thePlayer.closeScreen();
+                Thread.sleep(500);
+
                 processModule.toggle();
                 processModule.onEnable();
                 BuilderState.enabled = true;
