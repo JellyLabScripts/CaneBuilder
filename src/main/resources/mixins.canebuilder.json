@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.jelly.CaneBuilder.mixins",
+  "refmap": "mixins.canebuilder.refmap.json",
+  "mixins": [
+    "MinecraftMixin"
+  ],
+  "client": [
+  ]
+}

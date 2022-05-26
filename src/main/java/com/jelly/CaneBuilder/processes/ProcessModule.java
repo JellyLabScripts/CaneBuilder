@@ -38,6 +38,10 @@ public abstract class ProcessModule {
 
     public void toggle() {
         enabled = !enabled;
+        if(enabled)
+            onEnable();
+        if(!enabled)
+            onDisable();
     }
 
     protected void threadSleep(int millis) {

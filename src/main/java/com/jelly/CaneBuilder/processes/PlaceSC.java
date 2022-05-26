@@ -5,15 +5,19 @@ import com.jelly.CaneBuilder.ThreadManager;
 import com.jelly.CaneBuilder.utils.*;
 
 import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import static com.jelly.CaneBuilder.utils.Utils.clickWindow;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
 import scala.concurrent.Await;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
@@ -23,10 +27,12 @@ public class PlaceSC extends ProcessModule {
     boolean switching = false;
     boolean lagged = false;
     boolean pushedOff = false;
+
     BlockPos targetBlockPos = new BlockPos(10000, 10000, 10000);
     Clock lagCooldown = new Clock();
     State currentState;
     State lastState;
+
 
     enum State {
         START,
@@ -48,12 +54,11 @@ public class PlaceSC extends ProcessModule {
             return;
 
         if (blockLagged() && !lagged) {
-            Utils.addCustomLog("Detected lag");
+            Utils.addCustomLog("Detected not placed sugarcane");
             lagged = true;
             lagCooldown.schedule(700);
         }
         if (lagged) {
-            Utils.addCustomLog("Lagging");
             if (lagCooldown.passed()) {
                 targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
                 lagged = false;
@@ -93,6 +98,13 @@ public class PlaceSC extends ProcessModule {
                 pushedOff = true;
                 return;
             case FORWARD:
+                if (BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt)) {
+                    currentState = State.NONE;
+                    Utils.addCustomLog("Completed sugarcane placement");
+                    resetKeybindState();
+                    CaneBuilder.switchToNextProcess(this);
+                    return;
+                }
                 updateKeys(true, false, false, false, false, false, true);
                 pushedOff = false;
                 return;
@@ -109,8 +121,9 @@ public class PlaceSC extends ProcessModule {
         switching = false;
         currentState = State.START;
 
-        ThreadManager.executeThread(new Thread(() -> {
+        ExecuteRunnable(new Thread(() -> {
             try {
+                //autosell dirt
                 threadSleep(500);
                 mc.thePlayer.inventory.currentItem = 8;
                 threadSleep(100);
@@ -124,19 +137,49 @@ public class PlaceSC extends ProcessModule {
                 }
                 threadSleep(500);
                 mc.thePlayer.closeScreen();
-                threadSleep(500);
+                //clear hotbar & set rancher's boots
+                Utils.addCustomLog("Setting Rancher's boot's speed");
+                Thread.sleep(500);
                 mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                threadSleep(500);
+                Thread.sleep(500);
                 for(int i = 36; i < 44; i ++){
-                    Utils.clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
+                    clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
                     Thread.sleep(500);
                 }
                 Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 8, 0, 0);
+                Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 0);
+                Thread.sleep(250);
                 mc.thePlayer.closeScreen();
-                threadSleep(500);
+                Thread.sleep(250);
+                mc.thePlayer.inventory.currentItem = 0;
+                Thread.sleep(250);
+                KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
+                Thread.sleep(1000);
+                Method m = ((GuiEditSign)mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
+                Utils.addCustomLog(m.toString());
+                m.setAccessible(true);
+                m.invoke(mc.currentScreen, '\r', 14);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '\r', 14);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '\r', 14);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '2', 16);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '0', 16);
+                Thread.sleep(500);
+                m.invoke(mc.currentScreen, '0', 16);
+                Thread.sleep(500);
+                mc.thePlayer.closeScreen();
+
+                //init pos
+                Utils.addCustomLog("Initializing place sugarcane");
                 rotation.easeTo(AngleUtils.parallelToC1(), 89f, 1000);
                 while (rotation.rotating)
                     threadSleep(1);
+
                 Utils.goToRelativeBlock(0, calculateInitWalk());
                 threadSleep(500);
                 mc.thePlayer.inventory.currentItem = 6;

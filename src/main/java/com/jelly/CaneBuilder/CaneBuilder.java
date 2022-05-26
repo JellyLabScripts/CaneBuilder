@@ -45,6 +45,8 @@ public class CaneBuilder {
 
     public static String[] requiredSlotsName = new String[]{"Builder", "Infini", "Shovel", "Prisma", "Magical", "Pickaxe", "Aspect", "Dirt"};
 
+    public static boolean isFastBreakOn = false;
+
     @Mod.EventHandler
     public static void init(FMLInitializationEvent event) {
         try {
@@ -138,9 +140,7 @@ public class CaneBuilder {
         for (int i = 0; i < processes.size(); i++) {
             if (processes.get(i).equals(currentModule)) {
                 processes.get(i).toggle();
-                processes.get(i).onDisable();
                 if (i < processes.size() - 1) {
-                    processes.get(i + 1).onEnable();
                     processes.get(i + 1).toggle();
                 } else {
                     Utils.addCustomMessage("Completed Layer!", EnumChatFormatting.GREEN);
@@ -152,6 +152,7 @@ public class CaneBuilder {
 
     public static void startScript(ProcessModule processModule){
 
+        isFastBreakOn = false;
         ThreadManager.executeThread(new Thread(() -> {
             try {
                 Utils.addCustomLog("Setting Rancher's boot's speed");
@@ -188,7 +189,6 @@ public class CaneBuilder {
                 Thread.sleep(500);
                 m.invoke(mc.currentScreen, '0', 16);
                 Thread.sleep(500);
-                Thread.sleep(500);
                 mc.thePlayer.closeScreen();
                 Thread.sleep(500);
                 KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
@@ -205,7 +205,6 @@ public class CaneBuilder {
                 Thread.sleep(500);
 
                 processModule.toggle();
-                processModule.onEnable();
                 BuilderState.enabled = true;
             } catch(Exception e){
                 e.printStackTrace();
@@ -223,7 +222,6 @@ public class CaneBuilder {
         ThreadManager.stopExistingThreads();
         for (ProcessModule process : processes) {
             if (process.isEnabled()) {
-                process.onDisable();
                 process.toggle();
             }
         }

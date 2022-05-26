@@ -26,6 +26,7 @@ public class DigPath2 extends ProcessModule {
 
     @Override
     public void onTick() {
+
         if (rotation.rotating) {
             resetKeybindState();
             return;
@@ -64,6 +65,7 @@ public class DigPath2 extends ProcessModule {
 
     @Override
     public void onEnable() {
+        CaneBuilder.isFastBreakOn = true;
         resetKeybindState();
         currentState = State.NONE;
         aote = false;
@@ -73,7 +75,6 @@ public class DigPath2 extends ProcessModule {
 
     @Override
     public void onDisable() {
-
     }
 
     private void updateState() {
