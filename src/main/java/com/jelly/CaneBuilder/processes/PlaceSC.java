@@ -6,6 +6,7 @@ import com.jelly.CaneBuilder.utils.*;
 
 import static com.jelly.CaneBuilder.KeyBindHelper.*;
 import static com.jelly.CaneBuilder.utils.Utils.clickWindow;
+import static com.jelly.CaneBuilder.utils.Utils.countDirtStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiEditSign;
@@ -22,16 +23,16 @@ import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 public class PlaceSC extends ProcessModule {
-    boolean refillingSc;
-    boolean canePlaceLag;
-    boolean switching = false;
-    boolean lagged = false;
-    boolean pushedOff = false;
+    volatile boolean refillingSc;
+    volatile boolean canePlaceLag;
+    volatile boolean switching = false;
+    volatile boolean lagged = false;
+    volatile boolean pushedOff = false;
 
-    BlockPos targetBlockPos = new BlockPos(10000, 10000, 10000);
-    Clock lagCooldown = new Clock();
-    State currentState;
-    State lastState;
+    volatile BlockPos targetBlockPos = new BlockPos(10000, 10000, 10000);
+    volatile Clock lagCooldown = new Clock();
+    volatile State currentState;
+    volatile State lastState;
 
 
     enum State {
@@ -46,12 +47,14 @@ public class PlaceSC extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating || refillingSc) {
+
+        if (rotation.rotating || refillingSc || Utils.getLocation() != Utils.location.ISLAND) {
             resetKeybindState();
             return;
         }
         if (currentState == State.START)
             return;
+
 
         if (blockLagged() && !lagged) {
             Utils.addCustomLog("Detected not placed sugarcane");
@@ -69,7 +72,7 @@ public class PlaceSC extends ProcessModule {
         if (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
             refillingSc = true;
             updateKeys(false, false, false, false, false, false, false);
-            ExecuteRunnable(RefillSc);
+            ExecuteRunnable(new Thread(RefillSc));
             return;
         }
 
@@ -119,11 +122,16 @@ public class PlaceSC extends ProcessModule {
         refillingSc = false;
         lagged = false;
         switching = false;
+        pushedOff = false;
         currentState = State.START;
-
         ExecuteRunnable(new Thread(() -> {
             try {
                 //autosell dirt
+                rotation.easeTo(AngleUtils.parallelToC2(), 89f, 500);
+                threadSleep(500);
+                mc.thePlayer.inventory.currentItem = 6;
+                threadSleep(100);
+                onTick(keybindUseItem);
                 threadSleep(500);
                 mc.thePlayer.inventory.currentItem = 8;
                 threadSleep(100);
@@ -131,7 +139,7 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(800);
                 Utils.clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
                 threadSleep(1000);
-                while (Utils.getFirstSlotWithDirt() != -1 && enabled) {
+                while (Utils.getFirstSlotWithDirt() != -1 && enabled && Utils.countDirtStack() > 3) {
                     Utils.clickWindow(mc.thePlayer.openContainer.windowId, 45 + Utils.getFirstSlotWithDirt(), 0, 0);
                     threadSleep(500);
                 }
@@ -173,7 +181,10 @@ public class PlaceSC extends ProcessModule {
                 m.invoke(mc.currentScreen, '0', 16);
                 Thread.sleep(500);
                 mc.thePlayer.closeScreen();
-
+                mc.thePlayer.inventory.currentItem = 0;
+                Thread.sleep(500);
+                KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+                Thread.sleep(500);
                 //init pos
                 Utils.addCustomLog("Initializing place sugarcane");
                 rotation.easeTo(AngleUtils.parallelToC1(), 89f, 1000);
@@ -193,6 +204,7 @@ public class PlaceSC extends ProcessModule {
                     setKeyBindState(keybindUseItem, false);
                 }
                 threadSleep(500);
+                lastState = State.START;
                 currentState = State.NONE;
                 targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
             } catch (Exception e) {
@@ -236,11 +248,13 @@ public class PlaceSC extends ProcessModule {
         }
     }
 
-    Thread RefillSc = new Thread() {
+    Runnable RefillSc = new Runnable() {
         @Override
         public void run() {
 
             try {
+
+                Utils.addCustomLog("Refilling sugarcane");
                 updateKeys(false, false, false, false, false, false, false);
                 if (!Utils.hasSugarcaneInInv()) {
                     Utils.addCustomLog("Buying sugarcane from bazaar");

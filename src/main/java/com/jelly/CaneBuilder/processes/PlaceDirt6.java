@@ -12,7 +12,7 @@ public class PlaceDirt6 extends ProcessModule{
     public void onTick() {
         mc.thePlayer.inventory.currentItem = 0;
 
-        if (rotation.rotating) {
+        if (rotation.rotating || Utils.getLocation() != Utils.location.ISLAND) {
             resetKeybindState();
             return;
         }

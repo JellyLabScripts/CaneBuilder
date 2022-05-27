@@ -52,6 +52,7 @@ public class KeyBindHelper {
                 if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
                     for (ProcessModule process : CaneBuilder.processes) {
                         if (process instanceof PlaceDirt1) {
+                            CaneBuilder.layerCount = 0;
                             CaneBuilder.startScript(process);
                         }
                     }

@@ -31,7 +31,7 @@ public class DigTrench extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating) {
+        if (rotation.rotating  || Utils.getLocation() != Utils.location.ISLAND) {
             resetKeybindState();
             return;
         }

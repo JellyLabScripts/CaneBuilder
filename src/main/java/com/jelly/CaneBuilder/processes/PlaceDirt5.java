@@ -29,6 +29,12 @@ public class PlaceDirt5 extends ProcessModule {
 
     @Override
     public void onTick() {
+
+        if(Utils.getLocation() != Utils.location.ISLAND){
+            resetKeybindState();
+            return;
+        }
+
         if (rotation.rotating) {
             resetKeybindState();
             return;
@@ -58,14 +64,6 @@ public class PlaceDirt5 extends ProcessModule {
             return;
         }
 
-        if (setTP) {
-            if (tpSet.passed()) {
-                mc.thePlayer.sendChatMessage("/setspawn");
-                setTP = false;
-            }
-            resetKeybindState();
-            return;
-        }
 
         if (!onSecondLayer) {
             mc.thePlayer.inventory.currentItem = 7;
@@ -88,6 +86,15 @@ public class PlaceDirt5 extends ProcessModule {
                 updateKeys(false, false, false, false, false, shouldPlace, true);
             }
         } else {
+
+            if (setTP) {
+                if (tpSet.passed()) {
+                    mc.thePlayer.sendChatMessage("/setspawn");
+                    setTP = false;
+                }
+                resetKeybindState();
+                return;
+            }
             mc.thePlayer.inventory.currentItem = 1;
             boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
             boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner2.getParallel();
@@ -106,10 +113,7 @@ public class PlaceDirt5 extends ProcessModule {
     public void onEnable() {
         setTP = false;
         mc.thePlayer.inventory.currentItem = 1;
-        Block blockStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)).getBlock();
-        Block blockBelowStandingOn = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 2, mc.thePlayer.posZ)).getBlock();
-        Block blockBelowStandingOn2 = mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 3, mc.thePlayer.posZ)).getBlock();
-        onSecondLayer = blockStandingOn.equals(Blocks.dirt) && blockBelowStandingOn.equals(Blocks.dirt) && blockBelowStandingOn2.equals(Blocks.dirt);
+        onSecondLayer = (int)mc.thePlayer.posY - BuilderState.corner1.getY() == 3;
         mc.thePlayer.inventory.currentItem = 1;
         mc.thePlayer.sendChatMessage("/hub");
         currentState = State.TELEPORTING;

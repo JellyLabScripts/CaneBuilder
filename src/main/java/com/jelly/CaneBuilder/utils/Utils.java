@@ -176,6 +176,23 @@ public class Utils {
 
     }
 
+    public static int countDirtStack() {
+        int count = 0;
+        for (Slot slot : Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots) {
+            if (slot != null) {
+                if (slot.getStack() != null) {
+                    try {
+                        if (slot.getStack().getDisplayName().contains("Dirt"))
+                            count++;
+                    } catch (Exception ignored) {}
+                }
+            }
+
+        }
+        return count;
+
+    }
+
     public static int getFirstSlotWithDirt() {
         for (Slot slot : Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots) {
             if (slot != null) {
@@ -183,9 +200,7 @@ public class Utils {
                     try {
                         if (slot.getStack().getItem().equals(Item.getItemFromBlock(Blocks.dirt)))
                             return slot.slotNumber;
-                    } catch (Exception e) {
-
-                    }
+                    } catch (Exception ignored) {}
                 }
             }
 

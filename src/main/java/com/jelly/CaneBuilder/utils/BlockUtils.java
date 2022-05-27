@@ -26,6 +26,7 @@ public class BlockUtils {
         }
     }
 
+
     public static int getUnitZ() {
         double modYaw = (mc.thePlayer.rotationYaw % 360 + 360) % 360;
         if (modYaw < 45 || modYaw > 315) {

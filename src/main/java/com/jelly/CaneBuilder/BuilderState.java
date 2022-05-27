@@ -13,6 +13,8 @@ public class BuilderState {
     public static Coord corner1 = null;
     public static Coord corner2 = null;
     public static int direction = -1;
+    public static int layer = 0;
+    public static boolean isSwitchingLayer = false;
 
     public static void setCorner1(int x, int y, int z) {
         corner1 = new Coord(x, y, z);
@@ -25,6 +27,7 @@ public class BuilderState {
         Utils.addCustomMessage("Set corner 2 to: " + corner2, EnumChatFormatting.GREEN);
         Config.writeConfig();
     }
+
 
     public static int lookingAtParallel() {
         if (direction == 0) {
