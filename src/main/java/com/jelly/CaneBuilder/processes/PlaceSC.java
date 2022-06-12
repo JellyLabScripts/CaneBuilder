@@ -16,8 +16,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import scala.concurrent.Await;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
@@ -35,7 +37,16 @@ public class PlaceSC extends ProcessModule {
     volatile State lastState;
 
 
-    enum State {
+    public final static Field rightClickDelayTimerField;
+
+    static {
+        rightClickDelayTimerField = ReflectionHelper.findField(Minecraft.class, "field_71467_ac", "rightClickDelayTimer");
+
+        if (rightClickDelayTimerField != null) {
+            rightClickDelayTimerField.setAccessible(true);
+        }
+    }
+        enum State {
         START,
         RIGHT,
         LEFT,
@@ -56,6 +67,11 @@ public class PlaceSC extends ProcessModule {
             return;
 
 
+        try {
+            rightClickDelayTimerField.set(mc, 0);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         if (blockLagged() && !lagged) {
             Utils.addCustomLog("Detected not placed sugarcane");
             lagged = true;
@@ -84,6 +100,8 @@ public class PlaceSC extends ProcessModule {
 
         mc.thePlayer.rotationPitch = 50;
         mc.thePlayer.inventory.currentItem = Utils.getFirstHotbarSlotWithSugarcane() - 36;
+
+
 
         switch (currentState) {
             case LEFT:

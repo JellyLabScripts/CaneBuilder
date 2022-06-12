@@ -24,6 +24,7 @@ public class ThreadManager {
         for(Thread t : currentThreads){
             Utils.addCustomLog("Threads interrupted");
             t.interrupt();
+            currentThreads.remove(t);
         }
     }
 

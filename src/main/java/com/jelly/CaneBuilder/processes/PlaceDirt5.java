@@ -2,6 +2,7 @@ package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.ThreadManager;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
 import com.jelly.CaneBuilder.utils.Clock;
@@ -23,8 +24,10 @@ public class PlaceDirt5 extends ProcessModule {
     boolean setTP = false;
     enum State {
         TELEPORTING,
-        PLACING
+        PLACING,
+        EFFECT
     }
+    boolean setEffect = false;
     State currentState;
 
     @Override
@@ -56,14 +59,24 @@ public class PlaceDirt5 extends ProcessModule {
         if (currentState == State.TELEPORTING) {
             if (Utils.getLocation() == Utils.location.ISLAND && teleportWait.passed()) {
                 resetKeybindState();
-                currentState = State.PLACING;
-                rotation.easeTo(AngleUtils.parallelToC1(), 89, 1000);
-                mc.thePlayer.inventory.currentItem = 6;
-                aote = true;
+                currentState = State.EFFECT;
             }
             return;
         }
 
+        if(currentState == State.EFFECT){
+            if(!setEffect){
+                ThreadManager.executeThread(new Thread(() -> {
+                    CaneBuilder.disableJumpPotion();
+                    currentState = State.PLACING;
+                    rotation.easeTo(AngleUtils.parallelToC1(), 89, 1000);
+                    mc.thePlayer.inventory.currentItem = 6;
+                    aote = true;
+                }));
+                setEffect = true;
+            }
+            return;
+        }
 
         if (!onSecondLayer) {
             mc.thePlayer.inventory.currentItem = 7;
@@ -118,6 +131,8 @@ public class PlaceDirt5 extends ProcessModule {
         mc.thePlayer.sendChatMessage("/hub");
         currentState = State.TELEPORTING;
         teleportWait.schedule(2000);
+        setEffect = false;
+
     }
 
     @Override

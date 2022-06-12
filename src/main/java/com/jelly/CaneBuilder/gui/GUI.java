@@ -12,10 +12,6 @@ public class GUI extends GuiScreen {
     int buttonHeight = 65;
     int buttonYSpace = 20;
     int buttonXSpace = 25;
-
-    int setmode = 0;
-
-
     @Override
     public void initGui() {
         super.initGui();
@@ -31,9 +27,6 @@ public class GUI extends GuiScreen {
         this.buttonList.add(new GuiBetterButton(4, horizontalMiddle - buttonXSpace  - buttonWidth,  verticalMiddle + buttonYSpace + buttonHeight, buttonWidth, buttonHeight, "Dig Path 1"));
         this.buttonList.add(new GuiBetterButton(5, horizontalMiddle,  verticalMiddle + buttonYSpace + buttonHeight , buttonWidth, buttonHeight, "Dig Path 2"));
         this.buttonList.add(new GuiBetterButton(6, horizontalMiddle + buttonXSpace +  buttonWidth,  verticalMiddle  + buttonYSpace + buttonHeight, buttonWidth, buttonHeight, "Place sugarcane"));
-        this.buttonList.add(new GuiBetterButton(7, horizontalMiddle + buttonXSpace +   buttonWidth,  verticalMiddle - buttonYSpace * 2 - buttonHeight, buttonWidth, buttonHeight, "Set corners"));
-
-
 
     }
 
@@ -128,19 +121,6 @@ public class GUI extends GuiScreen {
                         }
                     }
                 }
-                return;
-            case 7 :
-                if (setmode == 0) {
-                    BuilderState.setCorner1((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
-                } else {
-                    BuilderState.setCorner2((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
-                }
-
-                setmode = 1 - setmode;
-                return;
-
-
-
         }
 
     }

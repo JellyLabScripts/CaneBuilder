@@ -18,6 +18,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.potion.Potion;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -181,46 +182,27 @@ public class CaneBuilder {
     public static void startScript(ProcessModule processModule){
 
         isFastBreakOn = false;
+        if(BuilderState.layer == 0){
+            Utils.addCustomLog("Bozo set layer count");
+            return;
+        }
+        if(BuilderState.direction == 0){
+            if ((Math.abs(BuilderState.corner1.getZ() - BuilderState.corner2.getZ()) + 1) % 3 != 0){
+                Utils.addCustomLog("Bozo read #how-to-use and set the corners correctly");
+                return;
+            }
+        } else {
+            if ((Math.abs(BuilderState.corner1.getX() - BuilderState.corner2.getX()) + 1) % 3 != 0){
+                Utils.addCustomLog("Bozo read #how-to-use and set the corners correctly");
+                return;
+            }
+        }
         ThreadManager.executeThread(new Thread(() -> {
             try {
-
                 if(!(processModule instanceof PlaceSC)) {
+                    disableJumpPotion();
                     Utils.addCustomLog("Setting Rancher's boot's speed");
-                    Thread.sleep(500);
-                    mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                    Thread.sleep(500);
-                    for (int i = 36; i < 44; i++) {
-                        clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
-                        Thread.sleep(500);
-                    }
-
-                    Thread.sleep(500);
-                    clickWindow(mc.thePlayer.openContainer.windowId, 8, 0, 0);
-                    Thread.sleep(500);
-                    clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 0);
-                    Thread.sleep(250);
-                    mc.thePlayer.closeScreen();
-                    Thread.sleep(250);
-                    mc.thePlayer.inventory.currentItem = 0;
-                    Thread.sleep(250);
-                    KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
-                    Thread.sleep(1000);
-                    Method m = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
-                    Utils.addCustomLog(m.toString());
-                    m.setAccessible(true);
-                    m.invoke(mc.currentScreen, '\r', 14);
-                    Thread.sleep(500);
-                    m.invoke(mc.currentScreen, '\r', 14);
-                    Thread.sleep(500);
-                    m.invoke(mc.currentScreen, '\r', 14);
-                    Thread.sleep(500);
-                    m.invoke(mc.currentScreen, '4', 16);
-                    Thread.sleep(500);
-                    m.invoke(mc.currentScreen, '0', 16);
-                    Thread.sleep(500);
-                    m.invoke(mc.currentScreen, '0', 16);
-                    Thread.sleep(500);
-                    mc.thePlayer.closeScreen();
+                    setRancherBootsTo400();
                     Thread.sleep(500);
                     KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
                     Thread.sleep(500);
@@ -232,12 +214,9 @@ public class CaneBuilder {
                         clickWindow(mc.thePlayer.openContainer.windowId, Utils.getSlotNumberByDisplayName(s), 0, 1);
                         Thread.sleep(500);
                     }
-
                     mc.thePlayer.closeScreen();
                     Thread.sleep(500);
                 }
-
-
                 processModule.toggle();
                 BuilderState.isSwitchingLayer = false;
                 BuilderState.enabled = true;
@@ -257,12 +236,12 @@ public class CaneBuilder {
             hubCooldown.schedule(2000);
             while (!(hubCooldown.passed()) || !(Utils.getLocation() == location.ISLAND))
                 Thread.sleep(1);
-
             Thread.sleep(2000);
             setKeyBindState(KeyBindHelper.keyBindShift, true);
             Thread.sleep(200);
             setKeyBindState(KeyBindHelper.keyBindShift, false);
             Thread.sleep(500);
+            disableJumpPotion();
             mc.thePlayer.inventory.currentItem = 6;
             Thread.sleep(100);
             if(mc.currentScreen == null)
@@ -318,6 +297,68 @@ public class CaneBuilder {
                 process.toggle();
             }
         }
+    }
+
+    public static void disableJumpPotion(){
+        try {
+            if (mc.thePlayer.isPotionActive(Potion.jump)) {
+                Utils.addCustomLog("Setting potion effects");
+                Thread.sleep(500);
+                mc.thePlayer.inventory.currentItem = 8;
+                KeyBinding.onTick(keybindUseItem);
+                Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 49, 0, 0);
+                Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 30, 0, 0);
+                Thread.sleep(500);
+                clickWindow(mc.thePlayer.openContainer.windowId, 31, 0, 0);
+                Thread.sleep(500);
+                if (mc.thePlayer.isPotionActive(Potion.jump))
+                    clickWindow(mc.thePlayer.openContainer.windowId, 31, 0, 0);
+                Thread.sleep(500);
+                mc.thePlayer.closeScreen();
+                Thread.sleep(500);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    static void setRancherBootsTo400() throws Exception{
+        Thread.sleep(500);
+        mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+        Thread.sleep(500);
+        for (int i = 36; i < 44; i++) {
+            clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
+            Thread.sleep(500);
+        }
+
+        Thread.sleep(500);
+        clickWindow(mc.thePlayer.openContainer.windowId, 8, 0, 0);
+        Thread.sleep(500);
+        clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 0);
+        Thread.sleep(250);
+        mc.thePlayer.closeScreen();
+        Thread.sleep(250);
+        mc.thePlayer.inventory.currentItem = 0;
+        Thread.sleep(250);
+        KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
+        Thread.sleep(1000);
+        Method m = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
+        Utils.addCustomLog(m.toString());
+        m.setAccessible(true);
+        m.invoke(mc.currentScreen, '\r', 14);
+        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '\r', 14);
+        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '\r', 14);
+        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '4', 16);
+        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '0', 16);
+        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '0', 16);
+        Thread.sleep(500);
+        mc.thePlayer.closeScreen();
     }
 }
 

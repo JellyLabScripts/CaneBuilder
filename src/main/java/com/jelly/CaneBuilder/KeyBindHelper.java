@@ -11,12 +11,9 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 public class KeyBindHelper {
     static Minecraft mc = Minecraft.getMinecraft();
-    static KeyBinding[] customKeyBinds = new KeyBinding[3];
+    static KeyBinding[] customKeyBinds = new KeyBinding[4];
     static int setmode = 0;
     public static int keybindA = mc.gameSettings.keyBindLeft.getKeyCode();
     public static int keybindD = mc.gameSettings.keyBindRight.getKeyCode();
@@ -32,6 +29,7 @@ public class KeyBindHelper {
         customKeyBinds[0] = new KeyBinding("Open GUI", Keyboard.KEY_RSHIFT, "CaneBuilder");
         customKeyBinds[1] = new KeyBinding("Enable full script", Keyboard.KEY_F, "CaneBuilder");
         customKeyBinds[2] = new KeyBinding("Disable full script", Keyboard.KEY_Z, "CaneBuilder");
+        customKeyBinds[3] = new KeyBinding("Set corner", Keyboard.KEY_P, "CaneBuilder");
 
         for (KeyBinding customKeyBind : customKeyBinds) {
             ClientRegistry.registerKeyBinding(customKeyBind);
@@ -43,22 +41,26 @@ public class KeyBindHelper {
 
         if (customKeyBinds[0].isKeyDown()) {
             mc.displayGuiScreen(new GUI());
-            setmode = 1 - setmode;
             return;
 
         }
         if (customKeyBinds[1].isKeyDown()) {
             if (!BuilderState.enabled) {
-                if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
-                    for (ProcessModule process : CaneBuilder.processes) {
-                        if (process instanceof PlaceDirt1) {
-                            CaneBuilder.layerCount = 0;
-                            CaneBuilder.startScript(process);
-                        }
-                    }
-                } else {
+                if(Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) != BuilderState.corner1.getZ()) {
                     Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
+                    return;
                 }
+                if(BuilderState.corner1.getY() - 1 != (int)mc.thePlayer.posY){
+                    Utils.addCustomMessage("Your Y level is wrong! Read #how-to-use!");
+                    return;
+                }
+                for (ProcessModule process : CaneBuilder.processes) {
+                    if (process instanceof PlaceDirt1) {
+                        CaneBuilder.layerCount = 0;
+                        CaneBuilder.startScript(process);
+                    }
+                }
+
             }
             return;
         }
@@ -71,7 +73,15 @@ public class KeyBindHelper {
                 }
                 CaneBuilder.disableScript();
             }
-
+            return;
+        }
+        if(customKeyBinds[3].isKeyDown()){
+            if (setmode == 0) {
+                BuilderState.setCorner1((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
+            } else {
+                BuilderState.setCorner2((int) Math.floor(mc.thePlayer.posX), (int) Math.floor(mc.thePlayer.posY - 1), (int) Math.floor(mc.thePlayer.posZ));
+            }
+            setmode = 1 - setmode;
         }
 
     }
