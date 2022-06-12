@@ -50,7 +50,7 @@ public class KeyBindHelper {
                     Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
                     return;
                 }
-                if(BuilderState.corner1.getY() - 1 != (int)mc.thePlayer.posY){
+                if(BuilderState.corner1.getY() != (int)mc.thePlayer.posY - 1){
                     Utils.addCustomMessage("Your Y level is wrong! Read #how-to-use!");
                     return;
                 }

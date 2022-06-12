@@ -7,10 +7,7 @@ import com.jelly.CaneBuilder.commands.SetLayer;
 import com.jelly.CaneBuilder.config.Config;
 import com.jelly.CaneBuilder.features.Failsafe;
 import com.jelly.CaneBuilder.processes.*;
-import com.jelly.CaneBuilder.utils.AngleUtils;
-import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Rotation;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.*;
 import javafx.util.Builder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -20,6 +17,7 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -38,8 +36,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.jelly.CaneBuilder.KeyBindHelper.keybindUseItem;
-import static com.jelly.CaneBuilder.KeyBindHelper.setKeyBindState;
+import static com.jelly.CaneBuilder.KeyBindHelper.*;
 import static com.jelly.CaneBuilder.utils.Utils.*;
 
 /*
@@ -52,7 +49,7 @@ public class CaneBuilder {
     public static final String NAME = "Cane Builder";
     public static final String VERSION = "2.0";
 
-    public Rotation rotation = new Rotation();
+    public static Rotation rotation = new Rotation();
 
     public static List<ProcessModule> processes = new ArrayList<>();
     public static Minecraft mc = Minecraft.getMinecraft();
@@ -64,6 +61,7 @@ public class CaneBuilder {
 
 
     static Clock hubCooldown = new Clock();
+    static Clock jumpCooldown = new Clock();
 
     @Mod.EventHandler
     public static void init(FMLInitializationEvent event) {
@@ -229,12 +227,27 @@ public class CaneBuilder {
 
     }
 
+
+
+
+    public static void disableScript() {
+        BuilderState.enabled = false;
+        BuilderState.isSwitchingLayer = false;
+        Utils.addCustomMessage("Disabling script", EnumChatFormatting.RED);
+        KeyBindHelper.resetKeybindState();
+        ThreadManager.stopExistingThreads();
+        for (ProcessModule process : processes) {
+            if (process.isEnabled()) {
+                process.toggle();
+            }
+        }
+    }
     public static Thread switchLayer = new Thread(() -> {
         try {
             BuilderState.isSwitchingLayer = true;
             mc.thePlayer.sendChatMessage("/hub");
             hubCooldown.schedule(2000);
-            while (!(hubCooldown.passed()) || !(Utils.getLocation() == location.ISLAND))
+            while (!(hubCooldown.passed()) || !(Utils.getLocation() == Utils.location.ISLAND))
                 Thread.sleep(1);
             Thread.sleep(2000);
             setKeyBindState(KeyBindHelper.keyBindShift, true);
@@ -250,7 +263,7 @@ public class CaneBuilder {
             mc.thePlayer.inventory.currentItem = 8;
             Thread.sleep(100);
             if(mc.currentScreen == null)
-                 KeyBinding.onTick(keybindUseItem);
+                KeyBinding.onTick(keybindUseItem);
             Thread.sleep(1500);
             Utils.clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
             Thread.sleep(1000);
@@ -268,9 +281,16 @@ public class CaneBuilder {
             mc.thePlayer.closeScreen();
             mc.thePlayer.inventory.currentItem = 0;
             while(((int)mc.thePlayer.posY - BuilderState.corner1.getY() < 8)){
-                KeyBindHelper.setKeyBindState(KeyBindHelper.keyBindJump, true);
-                KeyBindHelper.setKeyBindState(KeyBindHelper.keybindUseItem, true);
-                Thread.sleep(1);
+               if (jumpCooldown.passed()) {
+                    resetKeybindState();
+                    setKeyBindState(keyBindJump, true);
+                    jumpCooldown.schedule(1000);
+               } else {
+                    boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 2.2f;
+                    setKeyBindState(keyBindJump, false);
+                    updateKeys(false, false, false, false, false, shouldPlace, true);
+               }
+               Thread.sleep(50);
             }
             KeyBindHelper.resetKeybindState();
             Thread.sleep(1500);
@@ -284,20 +304,6 @@ public class CaneBuilder {
 
         }catch(Exception e){ disableScript(); }
     });
-
-
-    public static void disableScript() {
-        BuilderState.enabled = false;
-        BuilderState.isSwitchingLayer = false;
-        Utils.addCustomMessage("Disabling script", EnumChatFormatting.RED);
-        KeyBindHelper.resetKeybindState();
-        ThreadManager.stopExistingThreads();
-        for (ProcessModule process : processes) {
-            if (process.isEnabled()) {
-                process.toggle();
-            }
-        }
-    }
 
     public static void disableJumpPotion(){
         try {
