@@ -4,11 +4,11 @@ import com.jelly.CaneBuilder.commands.Corner1;
 import com.jelly.CaneBuilder.commands.Corner2;
 import com.jelly.CaneBuilder.commands.SetDirection;
 import com.jelly.CaneBuilder.config.Config;
+import com.jelly.CaneBuilder.features.Failsafe;
 import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MouseHelper;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -16,8 +16,6 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -50,11 +48,6 @@ public class CaneBuilder {
     public static List<ProcessModule> processes = new ArrayList<>();
     public static Minecraft mc = Minecraft.getMinecraft();
 
-    static boolean inFailsafe;
-    static boolean error;
-
-    MouseHelper mouseHelper = new MouseHelper();
-
     @Mod.EventHandler
     public static void init(FMLInitializationEvent event) {
         try {
@@ -64,6 +57,7 @@ public class CaneBuilder {
         }
         System.out.println("Registering");
         MinecraftForge.EVENT_BUS.register(new CaneBuilder());
+        MinecraftForge.EVENT_BUS.register(new Failsafe());
         ClientCommandHandler.instance.registerCommand(new SetDirection());
         ClientCommandHandler.instance.registerCommand(new Corner1());
         ClientCommandHandler.instance.registerCommand(new Corner2());
@@ -141,25 +135,6 @@ public class CaneBuilder {
         }
     }
 
-    @SubscribeEvent
-    public void onMessageReceived(ClientChatReceivedEvent event) {
-        if (event.message.getFormattedText().contains("You were spawned in Limbo") && !inFailsafe && BuilderState.enabled) {
-            activateFailsafe();
-            ScheduleRunnable(LeaveSBIsland, 8, TimeUnit.SECONDS);
-        }
-        if ((event.message.getFormattedText().contains("Sending to server") && !inFailsafe && BuilderState.enabled)) {
-            activateFailsafe();
-            ScheduleRunnable(WarpHome, 10, TimeUnit.SECONDS);
-        }
-        if ((event.message.getFormattedText().contains("DYNAMIC") || (event.message.getFormattedText().contains("Couldn't warp you")) && inFailsafe)) {
-            error = true;
-        }
-        if ((event.message.getFormattedText().contains("SkyBlock Lobby") && !inFailsafe && BuilderState.enabled)) {
-            activateFailsafe();
-            ScheduleRunnable(LeaveSBIsland, 10, TimeUnit.SECONDS);
-        }
-    }
-
     public static void switchToNextProcess(ProcessModule currentModule) {
         Utils.addCustomLog("Switching processes");
         KeyBindHelper.updateKeys(false, false, false, false, false, false, false);
@@ -177,82 +152,6 @@ public class CaneBuilder {
             }
         }
     }
-
-    Runnable LeaveSBIsland = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/l");
-            ScheduleRunnable(Rejoin, 5, TimeUnit.SECONDS);
-        }
-    };
-
-    Runnable WarpHub = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/warp hub");
-            ScheduleRunnable(WarpHome, 5, TimeUnit.SECONDS);
-        }
-    };
-
-    Runnable Rejoin = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/play sb");
-            ScheduleRunnable(WarpHome, 5, TimeUnit.SECONDS);
-        }
-    };
-
-    Runnable WarpHome = new Runnable() {
-        @Override
-        public void run() {
-            mc.thePlayer.sendChatMessage("/warp home");
-            ScheduleRunnable(afterRejoin1, 3, TimeUnit.SECONDS);
-        }
-    };
-
-
-    Runnable afterRejoin1 = new Runnable() {
-        @Override
-        public void run() {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-            if (!error) {
-                ScheduleRunnable(afterRejoin2, 1, TimeUnit.SECONDS);
-            } else {
-                Utils.addCustomLog("Error detected. Waiting 20 seconds");
-                ScheduleRunnable(WarpHome, 20, TimeUnit.SECONDS);
-                error = false;
-            }
-        }
-    };
-
-    Runnable afterRejoin2 = () -> {
-        KeyBinding.setKeyBindState(KeyBindHelper.keyBindShift, false);
-        mc.inGameHasFocus = true;
-        mouseHelper.grabMouseCursor();
-        mc.displayGuiScreen(null);
-        Field f;
-        f = FieldUtils.getDeclaredField(mc.getClass(), "leftClickCounter", true);
-        try {
-            f.set(mc, 10000);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        initVar();
-        inFailsafe = false;
-        BuilderState.enabled = true;
-    };
-
-
-    void ScheduleRunnable(Runnable r, int delay, TimeUnit tu) {
-        ScheduledExecutorService eTemp = Executors.newScheduledThreadPool(1);
-        eTemp.schedule(r, delay, tu);
-        eTemp.shutdown();
-    }
-
-    void initVar() {
-        inFailsafe = false;
-    }
-
     public static void disableScript() {
         BuilderState.enabled = false;
         Utils.addCustomMessage("Disabling script", EnumChatFormatting.RED);
@@ -265,10 +164,21 @@ public class CaneBuilder {
         }
     }
 
-    public static void activateFailsafe() {
-        inFailsafe = true;
-        BuilderState.enabled = false;
-        KeyBindHelper.updateKeys(false, false, false, false, false, false, false);
+    public static void startScript(ProcessModule processModule){
+        if(BuilderState.direction == 0){
+            if ((Math.abs(BuilderState.corner1.getZ() - BuilderState.corner2.getZ()) + 1) % 3 != 0){
+                Utils.addCustomLog("Bozo read #how-to-use and set the corners correctly");
+                return;
+            }
+        } else {
+            if ((Math.abs(BuilderState.corner1.getX() - BuilderState.corner2.getX()) + 1) % 3 != 0){
+                Utils.addCustomLog("Bozo read #how-to-use and set the corners correctly");
+                return;
+            }
+        }
+        processModule.toggle();
+        processModule.onEnable();
+        BuilderState.enabled = true;
     }
 }
 

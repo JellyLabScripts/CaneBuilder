@@ -3,7 +3,6 @@ package com.jelly.CaneBuilder;
 import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.utils.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -57,12 +56,6 @@ public class KeyBindHelper {
         }
 
         if (customKeyBinds[6].isKeyDown()) {
-            for (ProcessModule process : CaneBuilder.processes) {
-                if (process.isEnabled()) {
-                    process.toggle();
-                    process.onDisable();
-                }
-            }
             CaneBuilder.disableScript();
             return;
         }
@@ -75,18 +68,22 @@ public class KeyBindHelper {
 
         if (customKeyBinds[1].isKeyDown()) {
             if (!BuilderState.enabled) {
-                if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
-                    for (ProcessModule process : CaneBuilder.processes) {
-                        if (process instanceof PlaceDirt1) {
-                            process.toggle();
-                            process.onEnable();
-                            BuilderState.enabled = true;
-                        }
-                    }
-                } else {
+                if(Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) != BuilderState.corner1.getZ()) {
                     Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
+                    return;
                 }
+                if(BuilderState.corner1.getY() - 1 != (int)mc.thePlayer.posY){
+                    Utils.addCustomMessage("Your Y level is wrong! Read #how-to-use!");
+                    return;
+                }
+                for (ProcessModule process : CaneBuilder.processes) {
+                    if (process instanceof PlaceDirt1) {
+                        CaneBuilder.startScript(process);
+                    }
+                }
+
             }
+            return;
         }
 
         if (customKeyBinds[2].isKeyDown()) {
@@ -94,9 +91,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Digging trench)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof DigTrench) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
@@ -106,9 +101,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Filling trench)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof FillTrench) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
@@ -118,9 +111,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Digging path)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof DigPath2) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }
@@ -130,9 +121,7 @@ public class KeyBindHelper {
                 Utils.addCustomMessage("Enabling script (Placing sugarcane)");
                 for (ProcessModule process : CaneBuilder.processes) {
                     if (process instanceof PlaceSC) {
-                        process.toggle();
-                        process.onEnable();
-                        BuilderState.enabled = true;
+                        CaneBuilder.startScript(process);
                     }
                 }
             }

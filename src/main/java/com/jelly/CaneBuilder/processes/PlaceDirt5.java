@@ -21,6 +21,7 @@ public class PlaceDirt5 extends ProcessModule {
     Clock teleportWait = new Clock();
     Clock tpSet = new Clock();
     boolean setTP = false;
+
     enum State {
         TELEPORTING,
         PLACING
