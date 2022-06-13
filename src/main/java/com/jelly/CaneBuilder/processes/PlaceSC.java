@@ -6,7 +6,6 @@ import com.jelly.CaneBuilder.utils.*;
 
 import static com.jelly.CaneBuilder.KeyBindHelper.*;
 import static com.jelly.CaneBuilder.utils.Utils.clickWindow;
-import static com.jelly.CaneBuilder.utils.Utils.countDirtStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiEditSign;
@@ -85,7 +84,7 @@ public class PlaceSC extends ProcessModule {
             updateKeys(false, false, currentState == State.RIGHT, currentState == State.LEFT, false, true, false);
             return;
         }
-        if (!Utils.hasSugarcaneInHotbar() || !Utils.hasSugarcaneInInv()) {
+        if (!InventoryUtils.hasSugarcaneInHotbar() || !InventoryUtils.hasSugarcaneInInv()) {
             refillingSc = true;
             updateKeys(false, false, false, false, false, false, false);
             ExecuteRunnable(new Thread(RefillSc));
@@ -99,7 +98,7 @@ public class PlaceSC extends ProcessModule {
         lastState = currentState;
 
         mc.thePlayer.rotationPitch = 50;
-        mc.thePlayer.inventory.currentItem = Utils.getFirstHotbarSlotWithSugarcane() - 36;
+        mc.thePlayer.inventory.currentItem = InventoryUtils.getFirstHotbarSlotWithSugarcane() - 36;
 
 
 
@@ -157,8 +156,8 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(800);
                 Utils.clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
                 threadSleep(1000);
-                while (Utils.getFirstSlotWithDirt() != -1 && enabled && Utils.countDirtStack() > 3) {
-                    Utils.clickWindow(mc.thePlayer.openContainer.windowId, 45 + Utils.getFirstSlotWithDirt(), 0, 0);
+                while (InventoryUtils.getFirstSlotWithDirt() != -1 && enabled && InventoryUtils.countDirtStack() > 3) {
+                    Utils.clickWindow(mc.thePlayer.openContainer.windowId, 45 + InventoryUtils.getFirstSlotWithDirt(), 0, 0);
                     threadSleep(500);
                 }
                 threadSleep(500);
@@ -168,10 +167,7 @@ public class PlaceSC extends ProcessModule {
                 Thread.sleep(500);
                 mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
                 Thread.sleep(500);
-                for(int i = 36; i < 44; i ++){
-                    clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
-                    Thread.sleep(500);
-                }
+                clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 1);
                 Thread.sleep(500);
                 clickWindow(mc.thePlayer.openContainer.windowId, 8, 0, 0);
                 Thread.sleep(500);
@@ -274,7 +270,7 @@ public class PlaceSC extends ProcessModule {
 
                 Utils.addCustomLog("Refilling sugarcane");
                 updateKeys(false, false, false, false, false, false, false);
-                if (!Utils.hasSugarcaneInInv()) {
+                if (!InventoryUtils.hasSugarcaneInInv()) {
                     Utils.addCustomLog("Buying sugarcane from bazaar");
                     mc.thePlayer.sendChatMessage("/bz");
                     Thread.sleep(1000);
@@ -297,7 +293,7 @@ public class PlaceSC extends ProcessModule {
                     } else {
                         Utils.addCustomLog("Didn't open bazaar. Disabling script");
                     }
-                } else if (!Utils.hasSugarcaneInHotbar()) {
+                } else if (!InventoryUtils.hasSugarcaneInHotbar()) {
                     Utils.addCustomLog("Preparing to move sugarcane to hotbar");
                     Thread.sleep(1000);
                     if (mc.currentScreen == null)
@@ -306,8 +302,8 @@ public class PlaceSC extends ProcessModule {
                         return;
                     Thread.sleep(1000);
 
-                    while (!Utils.isHotbarFull() && Utils.hasSugarcaneInMainInv()) {
-                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithSugarcane(), 0, 1);
+                    while (!InventoryUtils.isHotbarFull() && InventoryUtils.hasSugarcaneInMainInv()) {
+                        Utils.clickWindow(mc.thePlayer.openContainer.windowId, InventoryUtils.getFirstSlotWithSugarcane(), 0, 1);
                         Thread.sleep(500);
                     }
                     mc.thePlayer.closeScreen();

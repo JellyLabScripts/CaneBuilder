@@ -178,7 +178,6 @@ public class CaneBuilder {
     }
 
     public static void startScript(ProcessModule processModule){
-
         isFastBreakOn = false;
         if(BuilderState.layer == 0){
             Utils.addCustomLog("Bozo set layer count");
@@ -201,15 +200,28 @@ public class CaneBuilder {
                     disableJumpPotion();
                     Utils.addCustomLog("Setting Rancher's boot's speed");
                     setRancherBootsTo400();
-                    Thread.sleep(500);
-                    KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+
                     Thread.sleep(500);
                     Utils.addCustomLog("Preparing inventory");
+
                     mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
                     Thread.sleep(500);
+                    for (int i = 0; i < requiredSlotsName.length; i++) {
+                        Utils.addCustomLog("Slot for " + requiredSlotsName[i] + " : " + InventoryUtils.getSlotNumberByDisplayName(requiredSlotsName[i]));
 
-                    for (String s : requiredSlotsName) {
-                        clickWindow(mc.thePlayer.openContainer.windowId, Utils.getSlotNumberByDisplayName(s), 0, 1);
+                        if(mc.thePlayer.inventoryContainer.getSlot(i + 36).getHasStack()) {
+                            if (mc.thePlayer.inventoryContainer.getSlot(i + 36).getStack().getDisplayName().contains(requiredSlotsName[i]))
+                                continue;
+
+                            clickWindow(mc.thePlayer.openContainer.windowId, 36 + i, 0, 1);
+                            Thread.sleep(500);
+                        }
+                        if(InventoryUtils.getSlotNumberByDisplayName(requiredSlotsName[i]) >= 36){
+                            clickWindow(mc.thePlayer.openContainer.windowId, InventoryUtils.getSlotNumberByDisplayName(requiredSlotsName[i]), 0, 1);
+                            Thread.sleep(500);
+                        }
+
+                        clickWindow(mc.thePlayer.openContainer.windowId, InventoryUtils.getSlotNumberByDisplayName(requiredSlotsName[i]), 0, 1);
                         Thread.sleep(500);
                     }
                     mc.thePlayer.closeScreen();
@@ -267,8 +279,8 @@ public class CaneBuilder {
             Thread.sleep(1500);
             Utils.clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
             Thread.sleep(1000);
-            while (Utils.getFirstSlotWithSugarcane() != 0) {
-                Utils.clickWindow(mc.thePlayer.openContainer.windowId, 45 + Utils.getFirstSlotWithSugarcane(), 0, 0);
+            while (InventoryUtils.getFirstSlotWithSugarcane() != 0) {
+                Utils.clickWindow(mc.thePlayer.openContainer.windowId, 45 + InventoryUtils.getFirstSlotWithSugarcane(), 0, 0);
                 Thread.sleep(500);
             }
             Thread.sleep(500);
@@ -276,7 +288,7 @@ public class CaneBuilder {
             Thread.sleep(500);
             mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
             Thread.sleep(500);
-            clickWindow(mc.thePlayer.openContainer.windowId, Utils.getFirstSlotWithDirt(), 0, 1);
+            clickWindow(mc.thePlayer.openContainer.windowId, InventoryUtils.getFirstSlotWithDirt(), 0, 1);
             Thread.sleep(500);
             mc.thePlayer.closeScreen();
             mc.thePlayer.inventory.currentItem = 0;
@@ -330,14 +342,20 @@ public class CaneBuilder {
         }
     }
     static void setRancherBootsTo400() throws Exception{
+        Utils.addCustomLog("Current rancher boot's speed = " + InventoryUtils.getRancherBootSpeed());
+        if(InventoryUtils.getRancherBootSpeed() == -1){
+            Utils.addCustomLog("Can't find rancher's boots data!");
+            throw new Exception();
+        }
+        if(InventoryUtils.getRancherBootSpeed() == 400) {
+            mc.thePlayer.closeScreen();
+            return;
+        }
+
         Thread.sleep(500);
         mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
         Thread.sleep(500);
-        for (int i = 36; i < 44; i++) {
-            clickWindow(mc.thePlayer.openContainer.windowId, i, 0, 1);
-            Thread.sleep(500);
-        }
-
+        clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 1);
         Thread.sleep(500);
         clickWindow(mc.thePlayer.openContainer.windowId, 8, 0, 0);
         Thread.sleep(500);
@@ -350,7 +368,6 @@ public class CaneBuilder {
         KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
         Thread.sleep(1000);
         Method m = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
-        Utils.addCustomLog(m.toString());
         m.setAccessible(true);
         m.invoke(mc.currentScreen, '\r', 14);
         Thread.sleep(500);
@@ -365,6 +382,11 @@ public class CaneBuilder {
         m.invoke(mc.currentScreen, '0', 16);
         Thread.sleep(500);
         mc.thePlayer.closeScreen();
+        Thread.sleep(500);
+        mc.thePlayer.inventory.currentItem = 0;
+        KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+        Thread.sleep(500);
+
     }
 }
 
