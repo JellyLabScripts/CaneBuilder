@@ -22,6 +22,7 @@ public class MinecraftMixin {
      *  @Author Apfelsaft gigachad
      */
 
+
     @Shadow
     public GuiScreen currentScreen;
 
