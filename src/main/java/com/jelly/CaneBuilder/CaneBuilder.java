@@ -204,7 +204,7 @@ public class CaneBuilder {
                     Thread.sleep(500);
                     Utils.addCustomLog("Preparing inventory");
 
-                    mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                    InventoryUtils.openInventory();
                     Thread.sleep(500);
                     for (int i = 0; i < requiredSlotsName.length; i++) {
                         Utils.addCustomLog("Slot for " + requiredSlotsName[i] + " : " + InventoryUtils.getSlotNumberByDisplayName(requiredSlotsName[i]));
@@ -286,7 +286,7 @@ public class CaneBuilder {
             Thread.sleep(500);
             mc.thePlayer.closeScreen();
             Thread.sleep(500);
-            mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+            InventoryUtils.openInventory();
             Thread.sleep(500);
             clickWindow(mc.thePlayer.openContainer.windowId, InventoryUtils.getFirstSlotWithDirt(), 0, 1);
             Thread.sleep(500);
@@ -353,7 +353,7 @@ public class CaneBuilder {
         }
 
         Thread.sleep(500);
-        mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+        InventoryUtils.openInventory();
         Thread.sleep(500);
         clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 1);
         Thread.sleep(500);

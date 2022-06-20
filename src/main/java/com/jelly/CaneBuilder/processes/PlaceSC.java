@@ -165,7 +165,7 @@ public class PlaceSC extends ProcessModule {
                 //clear hotbar & set rancher's boots
                 Utils.addCustomLog("Setting Rancher's boot's speed");
                 Thread.sleep(500);
-                mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                InventoryUtils.openInventory();
                 Thread.sleep(500);
                 clickWindow(mc.thePlayer.openContainer.windowId, 36, 0, 1);
                 Thread.sleep(500);
@@ -297,7 +297,7 @@ public class PlaceSC extends ProcessModule {
                     Utils.addCustomLog("Preparing to move sugarcane to hotbar");
                     Thread.sleep(1000);
                     if (mc.currentScreen == null)
-                        mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
+                        InventoryUtils.openInventory();
                     else
                         return;
                     Thread.sleep(1000);

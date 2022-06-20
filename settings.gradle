@@ -20,4 +20,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "CaneBuilder-Premium"
+rootProject.name = "CaneBuilder"

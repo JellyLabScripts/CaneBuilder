@@ -1,12 +1,14 @@
 package com.jelly.CaneBuilder.utils;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.client.C16PacketClientStatus;
 
 public class InventoryUtils {
     static Minecraft mc = Minecraft.getMinecraft();
@@ -158,5 +160,10 @@ public class InventoryUtils {
         }
         return -1;
 
+    }
+
+    public static void openInventory(){
+        mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+        mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
     }
 }
