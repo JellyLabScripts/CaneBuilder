@@ -7,6 +7,7 @@ import com.jelly.CaneBuilder.commands.SetLayer;
 import com.jelly.CaneBuilder.config.Config;
 import com.jelly.CaneBuilder.features.Failsafe;
 import com.jelly.CaneBuilder.processes.*;
+import com.jelly.CaneBuilder.structures.Coord;
 import com.jelly.CaneBuilder.utils.*;
 import javafx.util.Builder;
 import net.minecraft.client.Minecraft;
@@ -181,16 +182,17 @@ public class CaneBuilder {
         isFastBreakOn = false;
         if(BuilderState.layer == 0){
             Utils.addCustomLog("Bozo set layer count");
+
             return;
         }
         if(BuilderState.direction == 0){
-            if ((Math.abs(BuilderState.corner1.getZ() - BuilderState.corner2.getZ()) + 1) % 3 != 0){
-                Utils.addCustomLog("Bozo read #how-to-use and set the corners correctly");
+            if ((Math.abs(BuilderState.corner1.getZ() - BuilderState.corner2.getZ()) + 1) % 3 != 0) {
+                Utils.addCustomLog(suggestCoords(BuilderState.direction));
                 return;
             }
         } else {
             if ((Math.abs(BuilderState.corner1.getX() - BuilderState.corner2.getX()) + 1) % 3 != 0){
-                Utils.addCustomLog("Bozo read #how-to-use and set the corners correctly");
+                Utils.addCustomLog(suggestCoords(BuilderState.direction));
                 return;
             }
         }
@@ -240,7 +242,37 @@ public class CaneBuilder {
     }
 
 
+    private static String suggestCoords(int direction) {
+        int corner1 = direction == 0 ? BuilderState.corner1.getZ() : BuilderState.corner1.getX();
+        int corner2 = direction == 0 ? BuilderState.corner2.getZ() : BuilderState.corner2.getX();
+        while ((Math.abs(corner1) + Math.abs(corner2) + 1) % 3 != 0) {
+            if (Math.abs(corner1) < Math.abs(corner2)) {
+                if (Math.abs(corner2) == 80) {
+                    if (corner1 == -80) {corner1 += 2; break;}
+                    else if (corner1 == 80) {corner1 -= 2;break;}
+                }
+                corner1 += Integer.signum(corner2);
+            } else {
+                if (Math.abs(corner1) == 80) {
+                    if (corner2 == -80) {corner2 += 2; break;}
+                    else if (corner2 == 80) {corner2 -= 2;break;}
+                }
+                corner2 += Integer.signum(corner2);
+            }
+        }
+        Coord first;
+        Coord second;
 
+        if (direction == 0) {
+            first = new Coord(BuilderState.corner1.getX(), BuilderState.corner1.getY(), corner1);
+            second = new Coord(BuilderState.corner2.getX(), BuilderState.corner2.getY(), corner2);
+        } else {
+            first = new Coord(corner1, BuilderState.corner1.getY(), BuilderState.corner1.getZ());
+            second = new Coord(corner2, BuilderState.corner2.getY(), BuilderState.corner2.getZ());
+        }
+
+        return ("Incorrect corners bozo, you should change them to §a" + first + " " + second + "§7. If you don't like these coords, check out #how-to-use and do it yourself");
+    }
 
     public static void disableScript() {
         BuilderState.enabled = false;
