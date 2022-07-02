@@ -162,7 +162,7 @@ public class PlaceSC extends ProcessModule {
                 }
                 threadSleep(500);
                 mc.thePlayer.closeScreen();
-                //clear hotbar & set rancher's boots
+                //set rancher's boots
                 Utils.addCustomLog("Setting Rancher's boot's speed");
                 Thread.sleep(500);
                 InventoryUtils.openInventory();
@@ -198,6 +198,17 @@ public class PlaceSC extends ProcessModule {
                 mc.thePlayer.inventory.currentItem = 0;
                 Thread.sleep(500);
                 KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+                Thread.sleep(500);
+                //clear hotbar
+                InventoryUtils.openInventory();
+                for(int i = 0; i < 8; i++) {
+                    if (mc.thePlayer.inventoryContainer.getSlot(i + 36).getHasStack()) {
+                        clickWindow(mc.thePlayer.openContainer.windowId, 36 + i, 0, 1);
+                        Thread.sleep(500);
+                    }
+                }
+                Thread.sleep(500);
+                mc.thePlayer.closeScreen();
                 Thread.sleep(500);
                 //init pos
                 Utils.addCustomLog("Initializing place sugarcane");

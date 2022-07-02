@@ -3,6 +3,7 @@ package com.jelly.CaneBuilder;
 import com.jelly.CaneBuilder.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 public class ThreadManager {
@@ -21,11 +22,14 @@ public class ThreadManager {
         }).start();
     }
     public static void stopExistingThreads(){
-        for(Thread t : currentThreads){
-            Utils.addCustomLog("Threads interrupted");
-            t.interrupt();
-            currentThreads.remove(t);
+        for (Thread t : currentThreads) {
+            try {
+                Utils.addCustomLog("Threads interrupted");
+                t.interrupt();
+            } catch (Exception e) {
+            }
         }
+        currentThreads.clear();
     }
 
 
