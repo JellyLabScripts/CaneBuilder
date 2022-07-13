@@ -1,5 +1,6 @@
 package com.jelly.CaneBuilder.mixins;
 import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
@@ -48,7 +49,7 @@ public class MinecraftMixin {
 
     @Inject(method = "sendClickBlockToController", at = @At("RETURN"))
     private void sendClickBlockToController(CallbackInfo ci) {
-        if (!CaneBuilder.isFastBreakOn) return;
+        if (!MacroHandler.isFastBreakOn) return;
 
         boolean shouldClick = this.currentScreen == null && this.gameSettings.keyBindAttack.isKeyDown() && this.inGameHasFocus;
 

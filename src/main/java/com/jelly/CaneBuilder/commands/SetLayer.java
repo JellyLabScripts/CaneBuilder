@@ -1,15 +1,13 @@
 package com.jelly.CaneBuilder.commands;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.utils.Utils;
-import net.minecraft.client.Minecraft;
+import com.jelly.CaneBuilder.utils.LogUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
 
 public class SetLayer extends CommandBase {
-    Minecraft mc = Minecraft.getMinecraft();
 
     @Override
     public String getCommandName() {
@@ -31,12 +29,12 @@ public class SetLayer extends CommandBase {
         try {
             if (args.length == 1){
                 BuilderState.layer = Integer.parseInt(args[0]);
-                Utils.addCustomMessage("Set layer count to : " + args[0]);
+                LogUtils.addCustomMessage("Set layer count to : " + args[0]);
             } else {
-                Utils.addCustomMessage("Error, Usage: /layer <n>", EnumChatFormatting.RED);
+                LogUtils.addCustomMessage("Error, Usage: /layer <n>", EnumChatFormatting.RED);
             }
         } catch (Exception e) {
-            Utils.addCustomMessage("Error, Usage: /layer <n>", EnumChatFormatting.RED);
+            LogUtils.addCustomMessage("Error, Usage: /layer <n>", EnumChatFormatting.RED);
         }
     }
 }

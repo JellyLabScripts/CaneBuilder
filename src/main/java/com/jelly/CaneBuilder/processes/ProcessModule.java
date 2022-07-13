@@ -1,18 +1,9 @@
 package com.jelly.CaneBuilder.processes;
 
-import com.jelly.CaneBuilder.CaneBuilder;
-import com.jelly.CaneBuilder.ThreadManager;
-import com.jelly.CaneBuilder.utils.Rotation;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.handlers.ThreadHandler;
+import com.jelly.CaneBuilder.player.Rotation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
-
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 
 public abstract class ProcessModule {
@@ -28,9 +19,9 @@ public abstract class ProcessModule {
         }
     }
 
-    public abstract void onEnable();
+    protected abstract void onEnable();
 
-    public abstract void onDisable();
+    protected abstract void onDisable();
 
     public boolean isEnabled() {
         return enabled;
@@ -52,7 +43,7 @@ public abstract class ProcessModule {
         }
     }
     protected void ExecuteRunnable(Thread t) {
-        ThreadManager.executeThread(t);
+        ThreadHandler.executeThread(t);
     }
 
     protected void onTick(int keyCode) {

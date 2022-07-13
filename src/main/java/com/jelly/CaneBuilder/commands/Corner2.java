@@ -1,7 +1,7 @@
 package com.jelly.CaneBuilder.commands;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -34,10 +34,10 @@ public class Corner2 extends CommandBase {
             } else if (args.length == 3) {
                 BuilderState.setCorner2(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
             } else {
-                Utils.addCustomMessage("Error, Usage: /corner2 or /corner2 <x> <y> <z>", EnumChatFormatting.RED);
+                LogUtils.addCustomMessage("Error, Usage: /corner2 or /corner2 <x> <y> <z>", EnumChatFormatting.RED);
             }
         } catch (Exception e) {
-            Utils.addCustomMessage("Error, Usage: /corner2 or /corner2 <x> <y> <z>", EnumChatFormatting.RED);
+            LogUtils.addCustomMessage("Error, Usage: /corner2 or /corner2 <x> <y> <z>", EnumChatFormatting.RED);
         }
     }
 }

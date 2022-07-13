@@ -1,12 +1,11 @@
-package com.jelly.CaneBuilder;
+package com.jelly.CaneBuilder.handlers;
 
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.LogUtils;
 
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 
-public class ThreadManager {
+public class ThreadHandler {
 
     static List<Thread> currentThreads = new ArrayList<>();
 
@@ -24,7 +23,7 @@ public class ThreadManager {
     public static void stopExistingThreads(){
         for (Thread t : currentThreads) {
             try {
-                Utils.addCustomLog("Threads interrupted");
+                LogUtils.addCustomLog("Threads interrupted");
                 t.interrupt();
             } catch (Exception e) {
             }

@@ -1,15 +1,14 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
 import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Utils;
-import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import com.jelly.CaneBuilder.utils.LogUtils;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiScreen;
+import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
+
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
@@ -31,10 +30,7 @@ public class DigTrench extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating  || Utils.getLocation() != Utils.location.ISLAND) {
-            resetKeybindState();
-            return;
-        }
+
 
         if (aote) {
             resetKeybindState();
@@ -50,8 +46,8 @@ public class DigTrench extends ProcessModule {
 
         if (BuilderState.onParallel() == BuilderState.corner2.getParallel()) {
             resetKeybindState();
-            Utils.addCustomLog("Dig trench completed");
-            CaneBuilder.switchToNextProcess(DigTrench.this);
+            LogUtils.addCustomLog("Dig trench completed");
+            MacroHandler.switchToNextProcess(DigTrench.this);
         }
 
         mc.thePlayer.inventory.currentItem = 2;
@@ -121,7 +117,7 @@ public class DigTrench extends ProcessModule {
 
                 updateKeys(true, false, false, false, false);
                 if (shouldDig) {
-                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
                     onTick(keybindAttack);
                 }
@@ -131,7 +127,7 @@ public class DigTrench extends ProcessModule {
                 if (mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     KeyBinding.setKeyBindState(keyBindJump, false);
                     resetKeybindState();
-                    Utils.addCustomLog("Landed, switching to next trench");
+                    LogUtils.addCustomLog("Landed, switching to next trench");
                     currentState = State.WALK_NEXT;
                     rotation.easeTo(AngleUtils.get360RotationYaw() + 180, mc.thePlayer.rotationPitch, 1000);
                     return;

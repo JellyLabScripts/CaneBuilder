@@ -9,10 +9,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 public class Config {
-    public static void setConfig(Coord c1, Coord c2, int direction) {
+    public static void setConfig(Coord c1, Coord c2, int direction, boolean log) {
         BuilderState.corner1 = c1;
         BuilderState.corner2 = c2;
         BuilderState.direction = direction;
+        BuilderState.log = log;
+
     }
 
     public static void writeConfig() {
@@ -27,6 +29,8 @@ public class Config {
             bufferedWriter.write("\n" + BuilderState.corner2.getZ());
 
             bufferedWriter.write("\n" + BuilderState.direction);
+
+            bufferedWriter.write("\n" + BuilderState.log);
             bufferedWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -37,11 +41,12 @@ public class Config {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader("config/canebuilder.txt"));
             bufferedReader.readLine();
-            String url;
             setConfig(
               new Coord(Integer.parseInt(bufferedReader.readLine()), Integer.parseInt(bufferedReader.readLine()), Integer.parseInt(bufferedReader.readLine())),
               new Coord(Integer.parseInt(bufferedReader.readLine()), Integer.parseInt(bufferedReader.readLine()), Integer.parseInt(bufferedReader.readLine())),
-              Integer.parseInt(bufferedReader.readLine())
+              Integer.parseInt(bufferedReader.readLine()),
+                    Boolean.parseBoolean(bufferedReader.readLine())
+
             );
             bufferedReader.close();
         } catch (Exception e) {

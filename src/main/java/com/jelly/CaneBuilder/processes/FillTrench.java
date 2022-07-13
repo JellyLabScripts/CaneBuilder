@@ -1,12 +1,13 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
 import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Utils;
-import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import com.jelly.CaneBuilder.utils.LogUtils;
+
+import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
 import net.minecraft.init.Blocks;
 
 public class FillTrench extends ProcessModule {
@@ -27,10 +28,6 @@ public class FillTrench extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating  || Utils.getLocation() != Utils.location.ISLAND) {
-            resetKeybindState();
-            return;
-        }
 
         if (aote) {
             resetKeybindState();
@@ -48,8 +45,8 @@ public class FillTrench extends ProcessModule {
         if (done) {
             resetKeybindState();
             if (wait.passed()) {
-                Utils.addCustomMessage("Fill trench completed!");
-                CaneBuilder.switchToNextProcess(this);
+                LogUtils.addCustomMessage("Fill trench completed!");
+                MacroHandler.switchToNextProcess(this);
             }
             return;
         }
@@ -59,7 +56,7 @@ public class FillTrench extends ProcessModule {
             resetKeybindState();
             if (!done) {
                 done = true;
-                Utils.addCustomLog("Waiting 10 seconds for water flow");
+                LogUtils.addCustomLog("Waiting 10 seconds for water flow");
                 wait.schedule(10000);
             }
             return;
@@ -97,7 +94,7 @@ public class FillTrench extends ProcessModule {
                     mc.thePlayer.inventory.currentItem = 5;
                     currentState = State.BREAK_PUMP;
                 } else {
-                    Utils.addCustomLog("Placing water");
+                    LogUtils.addCustomLog("Placing water");
                     mc.thePlayer.inventory.currentItem = 4;
                     if(rotation.completed && rotateCooldown.passed())
                     setKeyBindState(keybindUseItem, true);
@@ -114,7 +111,7 @@ public class FillTrench extends ProcessModule {
                     currentState = State.WALK_NEXT;
                 } else {
                     resetKeybindState();
-                    Utils.addCustomLog("Waiting for water to flow backwards");
+                    LogUtils.addCustomLog("Waiting for water to flow backwards");
                 }
                 return;
 
@@ -139,6 +136,7 @@ public class FillTrench extends ProcessModule {
     @Override
     public void onEnable() {
         resetKeybindState();
+
         done = false;
         currentState = State.START;
         aote = false;

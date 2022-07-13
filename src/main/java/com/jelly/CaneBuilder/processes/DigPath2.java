@@ -1,11 +1,11 @@
 package com.jelly.CaneBuilder.processes;
 
-import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.LogUtils;
 
-import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
 
 import net.minecraft.init.Blocks;
 
@@ -27,17 +27,13 @@ public class DigPath2 extends ProcessModule {
     @Override
     public void onTick() {
 
-        if (rotation.rotating  || Utils.getLocation() != Utils.location.ISLAND) {
-            resetKeybindState();
-            return;
-        }
-
         if (aote) {
             mc.thePlayer.inventory.currentItem = 6;
             resetKeybindState();
             setKeyBindState(keybindUseItem, true);
             if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
                 aote = false;
+                mc.thePlayer.sendChatMessage("/setspawn");
                 rotation.reset();
                 rotation.easeTo(AngleUtils.get360RotationYaw(), pitch, 500);
                 mc.thePlayer.inventory.currentItem = 2;
@@ -65,7 +61,7 @@ public class DigPath2 extends ProcessModule {
 
     @Override
     public void onEnable() {
-        CaneBuilder.isFastBreakOn = true;
+        MacroHandler.isFastBreakOn = true;
         resetKeybindState();
         currentState = State.NONE;
         aote = false;
@@ -80,9 +76,9 @@ public class DigPath2 extends ProcessModule {
     private void updateState() {
         if (currentState == State.FORWARDS && !BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.air)) {
             currentState = State.NONE;
-            Utils.addCustomMessage("Completed Dig Path!");
+            LogUtils.addCustomMessage("Completed Dig Path!");
             resetKeybindState();
-            CaneBuilder.switchToNextProcess(this);
+            MacroHandler.switchToNextProcess(this);
             return;
         }
 

@@ -1,9 +1,9 @@
 package com.jelly.CaneBuilder.gui;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.processes.*;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.LogUtils;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -50,74 +50,74 @@ public class GUI extends GuiScreen {
             case 0 :
                 if (!BuilderState.enabled) {
                     if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) == BuilderState.corner1.getZ()) {
-                        for (ProcessModule process : CaneBuilder.processes) {
+                        for (ProcessModule process : MacroHandler.processes) {
                             if (process instanceof PlaceDirt1) {
-                                Utils.addCustomLog("starting");
-                                CaneBuilder.startScript(process);
+                                LogUtils.addCustomLog("starting");
+                                MacroHandler.startScript(process);
                             }
                         }
                     } else {
-                        Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
+                        LogUtils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
                     }
                 }
                 return;
 
             case 1 :
                 if (!BuilderState.enabled) {
-                    Utils.addCustomMessage("Enabling script (Dig trench)");
-                    for (ProcessModule process : CaneBuilder.processes) {
+                    LogUtils.addCustomMessage("Enabling script (Dig trench)");
+                    for (ProcessModule process : MacroHandler.processes) {
                         if (process instanceof DigTrench) {
-                            CaneBuilder.startScript(process);
+                            MacroHandler.startScript(process);
                         }
                     }
                 }
                 return;
             case 2 :
                 if (!BuilderState.enabled) {
-                    Utils.addCustomMessage("Enabling script (Fill trench)");
-                    for (ProcessModule process : CaneBuilder.processes) {
+                    LogUtils.addCustomMessage("Enabling script (Fill trench)");
+                    for (ProcessModule process : MacroHandler.processes) {
                         if (process instanceof FillTrench) {
-                            CaneBuilder.startScript(process);
+                            MacroHandler.startScript(process);
                         }
                     }
                 }
                 return;
             case 3 :
                 if (!BuilderState.enabled) {
-                    Utils.addCustomMessage("Enabling script (Place dirt 2)");
-                    for (ProcessModule process : CaneBuilder.processes) {
+                    LogUtils.addCustomMessage("Enabling script (Place dirt 2)");
+                    for (ProcessModule process : MacroHandler.processes) {
                         if (process instanceof PlaceDirt5) {
-                            CaneBuilder.startScript(process);
+                            MacroHandler.startScript(process);
                         }
                     }
                 }
                 return;
             case 4 :
                 if (!BuilderState.enabled) {
-                    Utils.addCustomMessage("Enabling script (Dig path 1)");
-                    for (ProcessModule process : CaneBuilder.processes) {
+                    LogUtils.addCustomMessage("Enabling script (Dig path 1)");
+                    for (ProcessModule process : MacroHandler.processes) {
                         if (process instanceof DigPath1) {
-                            CaneBuilder.startScript(process);
+                            MacroHandler.startScript(process);
                         }
                     }
                 }
                 return;
             case 5 :
                 if (!BuilderState.enabled) {
-                    Utils.addCustomMessage("Enabling script (Dig path 2)");
-                    for (ProcessModule process : CaneBuilder.processes) {
+                    LogUtils.addCustomMessage("Enabling script (Dig path 2)");
+                    for (ProcessModule process : MacroHandler.processes) {
                         if (process instanceof DigPath2) {
-                            CaneBuilder.startScript(process);
+                            MacroHandler.startScript(process);
                         }
                     }
                 }
                 return;
             case 6 :
                 if (!BuilderState.enabled) {
-                    Utils.addCustomMessage("Enabling script (Place sugarcane)");
-                    for (ProcessModule process : CaneBuilder.processes) {
+                    LogUtils.addCustomMessage("Enabling script (Place sugarcane)");
+                    for (ProcessModule process : MacroHandler.processes) {
                         if (process instanceof PlaceSC) {
-                            CaneBuilder.startScript(process);
+                            MacroHandler.startScript(process);
                         }
                     }
                 }

@@ -1,5 +1,6 @@
-package com.jelly.CaneBuilder.utils;
+package com.jelly.CaneBuilder.player;
 
+import com.jelly.CaneBuilder.utils.AngleUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -29,6 +30,11 @@ public class Rotation {
         getDifference();
     }
 
+    public void lockAngle(float yaw, float pitch) {
+        if (mc.thePlayer.rotationYaw != yaw || mc.thePlayer.rotationPitch != pitch && !rotating)
+            easeTo(yaw, pitch, 1000);
+    }
+
     public void update() {
         if (System.currentTimeMillis() <= endTime) {
             if (shouldRotateClockwise()) {
@@ -39,11 +45,7 @@ public class Rotation {
             mc.thePlayer.rotationPitch = start.right + interpolate(difference.right);
         }
         else if (!completed) {
-            if (shouldRotateClockwise()) {
-                mc.thePlayer.rotationYaw = start.left + difference.left;
-            } else {
-                mc.thePlayer.rotationYaw = start.left - difference.left;
-            }
+            mc.thePlayer.rotationYaw = target.left;
             mc.thePlayer.rotationPitch = start.right + difference.right;
             completed = true;
             rotating = false;

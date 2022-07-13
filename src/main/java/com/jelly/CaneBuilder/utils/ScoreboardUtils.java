@@ -17,6 +17,15 @@ import java.util.stream.Collectors;
 public class ScoreboardUtils {
     private static Minecraft mc = Minecraft.getMinecraft();
 
+
+    public enum location {
+        ISLAND,
+        HUB,
+        LOBBY,
+        LIMBO,
+        TELEPORTING
+    }
+
     public static List<String> getScoreboardLines() {
         List<String> lines = new ArrayList<>();
         if (mc.theWorld == null) return lines;
@@ -63,8 +72,32 @@ public class ScoreboardUtils {
         try {
             return mc.theWorld.getScoreboard().getObjectiveInDisplaySlot(line).getDisplayName();
         } catch (Exception e) {
-            Utils.addCustomLog("Error in getting scoreboard " + e);
+            LogUtils.addCustomLog("Error in getting scoreboard " + e);
             return "";
+        }
+    }
+
+    public static location getLocation() {
+        if (ScoreboardUtils.getScoreboardLines().size() == 0) {
+            if (BlockUtils.countCarpet() > 0) {
+                return location.LIMBO;
+            }
+            return location.TELEPORTING;
+        }
+
+        for (String line : ScoreboardUtils.getScoreboardLines()) {
+            String cleanedLine = ScoreboardUtils.cleanSB(line);
+            if (cleanedLine.contains("Village")) {
+                return location.HUB;
+            } else if (cleanedLine.contains("Island")) {
+                return location.ISLAND;
+            }
+        }
+
+        if (ScoreboardUtils.getScoreboardDisplayName(1).contains("SKYBLOCK")) {
+            return location.TELEPORTING;
+        } else {
+            return location.LOBBY;
         }
     }
 }

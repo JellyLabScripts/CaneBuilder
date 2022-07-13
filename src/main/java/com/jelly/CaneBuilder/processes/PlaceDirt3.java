@@ -1,14 +1,13 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.CaneBuilder;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
 import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Utils;
-import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import com.jelly.CaneBuilder.utils.LogUtils;
+import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
 import net.minecraft.block.Block;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
@@ -19,10 +18,6 @@ public class PlaceDirt3 extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating || Utils.getLocation() != Utils.location.ISLAND) {
-            resetKeybindState();
-            return;
-        }
 
         if (!onSecondLayer) {
             mc.thePlayer.inventory.currentItem = 7;
@@ -47,7 +42,7 @@ public class PlaceDirt3 extends ProcessModule {
 
             if (hasPlacedEnd) {
                 resetKeybindState();
-                CaneBuilder.switchToNextProcess(this);
+                MacroHandler.switchToNextProcess(this);
             }
 
             updateKeys(false, true, false, false, false, shouldPlace, true);

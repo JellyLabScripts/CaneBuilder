@@ -1,16 +1,13 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.CaneBuilder;
-import com.jelly.CaneBuilder.ThreadManager;
-import com.jelly.CaneBuilder.utils.AngleUtils;
-import com.jelly.CaneBuilder.utils.BlockUtils;
-import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Utils;
-import static com.jelly.CaneBuilder.KeyBindHelper.*;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
+import com.jelly.CaneBuilder.features.Failsafe;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
+import com.jelly.CaneBuilder.handlers.ThreadHandler;
+import com.jelly.CaneBuilder.utils.*;
+
+import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
+
 import net.minecraft.util.EnumFacing;
 
 public class PlaceDirt5 extends ProcessModule {
@@ -33,7 +30,7 @@ public class PlaceDirt5 extends ProcessModule {
     @Override
     public void onTick() {
 
-        if(Utils.getLocation() != Utils.location.ISLAND){
+        if(ScoreboardUtils.getLocation() != ScoreboardUtils.location.ISLAND){
             resetKeybindState();
             return;
         }
@@ -57,7 +54,7 @@ public class PlaceDirt5 extends ProcessModule {
         }
 
         if (currentState == State.TELEPORTING) {
-            if (Utils.getLocation() == Utils.location.ISLAND && teleportWait.passed()) {
+            if (ScoreboardUtils.getLocation() == ScoreboardUtils.location.ISLAND && teleportWait.passed()) {
                 resetKeybindState();
                 currentState = State.EFFECT;
             }
@@ -66,8 +63,8 @@ public class PlaceDirt5 extends ProcessModule {
 
         if(currentState == State.EFFECT){
             if(!setEffect){
-                ThreadManager.executeThread(new Thread(() -> {
-                    CaneBuilder.disableJumpPotion();
+                ThreadHandler.executeThread(new Thread(() -> {
+                    ProcessUtils.disableJumpPotion();
                     currentState = State.PLACING;
                     rotation.easeTo(AngleUtils.parallelToC1(), 89, 1000);
                     mc.thePlayer.inventory.currentItem = 6;
@@ -83,7 +80,7 @@ public class PlaceDirt5 extends ProcessModule {
             if (mc.objectMouseOver != null && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1))
                     && BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, -1, -1))
                     && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1.2) {
-                Utils.addCustomLog("On third layer");
+                LogUtils.addCustomLog("On third layer");
                 onSecondLayer = true;
                 setTP = true;
                 tpSet.schedule(2000);
@@ -113,9 +110,9 @@ public class PlaceDirt5 extends ProcessModule {
             boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner2.getParallel();
 
             if (hasPlacedEnd) {
-                Utils.addCustomLog("Done third line");
+                LogUtils.addCustomLog("Done third line");
                 resetKeybindState();
-                CaneBuilder.switchToNextProcess(this);
+                MacroHandler.switchToNextProcess(this);
             }
 
             updateKeys(false, true, false, false, false, shouldPlace, true);
@@ -124,6 +121,7 @@ public class PlaceDirt5 extends ProcessModule {
 
     @Override
     public void onEnable() {
+        Failsafe.pauseOnLeave = false;
         setTP = false;
         mc.thePlayer.inventory.currentItem = 1;
         onSecondLayer = (int)mc.thePlayer.posY - BuilderState.corner1.getY() == 3;

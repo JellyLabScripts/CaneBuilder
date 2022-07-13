@@ -1,17 +1,18 @@
-package com.jelly.CaneBuilder;
+package com.jelly.CaneBuilder.handlers;
 
+import com.jelly.CaneBuilder.BuilderState;
+import com.jelly.CaneBuilder.player.Baritone;
 import com.jelly.CaneBuilder.gui.GUI;
 import com.jelly.CaneBuilder.processes.*;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.utils.LogUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
 
-public class KeyBindHelper {
+public class KeyBindHandler {
     static Minecraft mc = Minecraft.getMinecraft();
     static KeyBinding[] customKeyBinds = new KeyBinding[4];
     static int setmode = 0;
@@ -25,6 +26,7 @@ public class KeyBindHelper {
     public static int keyBindShift = mc.gameSettings.keyBindSneak.getKeyCode();
     public static int keyBindJump = mc.gameSettings.keyBindJump.getKeyCode();
 
+
     public static void initializeCustomKeybindings() {
         customKeyBinds[0] = new KeyBinding("Open GUI", Keyboard.KEY_RSHIFT, "CaneBuilder");
         customKeyBinds[1] = new KeyBinding("Enable full script", Keyboard.KEY_F, "CaneBuilder");
@@ -36,8 +38,8 @@ public class KeyBindHelper {
         }
     }
 
-    public static void onKeyPress(InputEvent.KeyInputEvent event) {
-
+    @SubscribeEvent
+    public void onKeyPress(InputEvent.KeyInputEvent event) {
 
         if (customKeyBinds[0].isKeyDown()) {
             mc.displayGuiScreen(new GUI());
@@ -46,18 +48,10 @@ public class KeyBindHelper {
         }
         if (customKeyBinds[1].isKeyDown()) {
             if (!BuilderState.enabled) {
-                if(Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) != BuilderState.corner1.getZ()) {
-                    Utils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
-                    return;
-                }
-                if(BuilderState.corner1.getY() != (int)mc.thePlayer.posY - 1){
-                    Utils.addCustomMessage("Your Y level is wrong! Read #how-to-use!");
-                    return;
-                }
-                for (ProcessModule process : CaneBuilder.processes) {
+                for (ProcessModule process : MacroHandler.processes) {
                     if (process instanceof PlaceDirt1) {
-                        CaneBuilder.layerCount = 0;
-                        CaneBuilder.startScript(process);
+                        MacroHandler.layerCount = 0;
+                        MacroHandler.startScript(process);
                     }
                 }
 
@@ -66,12 +60,13 @@ public class KeyBindHelper {
         }
         if (customKeyBinds[2].isKeyDown()) {
             if(BuilderState.enabled) {
-                for (ProcessModule process : CaneBuilder.processes) {
+                for (ProcessModule process : MacroHandler.processes) {
                     if (process.isEnabled()) {
                         process.toggle();
                     }
                 }
-                CaneBuilder.disableScript();
+                MacroHandler.disableScript();
+                Baritone.stopWalk();
             }
             return;
         }
@@ -91,7 +86,7 @@ public class KeyBindHelper {
     public static void setKeyBindState(int keyCode, boolean pressed) {
         if (pressed) {
             if (mc.currentScreen != null) {
-                Utils.addCustomLog("In GUI, pausing");
+                LogUtils.addCustomLog("In GUI, pausing");
                 KeyBinding.setKeyBindState(keyCode, false);
                 return;
             }

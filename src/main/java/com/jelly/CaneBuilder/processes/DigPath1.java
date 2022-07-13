@@ -1,13 +1,11 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
-import com.jelly.CaneBuilder.CaneBuilder;
-import com.jelly.CaneBuilder.utils.AngleUtils;
-import com.jelly.CaneBuilder.utils.BlockUtils;
-import com.jelly.CaneBuilder.utils.Clock;
-import com.jelly.CaneBuilder.utils.Utils;
+import com.jelly.CaneBuilder.features.Failsafe;
+import com.jelly.CaneBuilder.handlers.MacroHandler;
+import com.jelly.CaneBuilder.utils.*;
 
-import static com.jelly.CaneBuilder.KeyBindHelper.*;
+import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
@@ -34,7 +32,7 @@ public class DigPath1 extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating  || Utils.getLocation() != Utils.location.ISLAND) {
+        if (rotation.rotating  || ScoreboardUtils.getLocation() != ScoreboardUtils.location.ISLAND) {
             resetKeybindState();
             return;
         }
@@ -53,7 +51,7 @@ public class DigPath1 extends ProcessModule {
         }
 
         if (currentState == State.TELEPORTING) {
-            if (Utils.getLocation() == Utils.location.ISLAND && teleportWait.passed()) {
+            if (ScoreboardUtils.getLocation() == ScoreboardUtils.location.ISLAND && teleportWait.passed()) {
                 resetKeybindState();
                 currentState = State.START;
                 rotation.easeTo(AngleUtils.parallelToC2(), 60, 1000);
@@ -134,7 +132,7 @@ public class DigPath1 extends ProcessModule {
 
                 updateKeys(true, false, false, false, false, false, false);
                 if (shouldDig) {
-                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
                     onTick(keybindAttack);
                 }
@@ -147,8 +145,8 @@ public class DigPath1 extends ProcessModule {
                   (int) mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     if (current == 1) {
                         resetKeybindState();
-                        CaneBuilder.switchToNextProcess(this);
-                        Utils.addCustomLog("Completed dig path 1");
+                        MacroHandler.switchToNextProcess(this);
+                        LogUtils.addCustomLog("Completed dig path 1");
                         return;
                     }
                     resetKeybindState();
@@ -182,7 +180,7 @@ public class DigPath1 extends ProcessModule {
 
                 updateKeys(true, false, false, false, false);
                 if (shouldDig) {
-                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
                     onTick(keybindAttack);
                 }
@@ -231,7 +229,7 @@ public class DigPath1 extends ProcessModule {
 
                 updateKeys(true, false, false, false, false);
                 if (shouldDig) {
-                    Utils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
+                    LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
                     onTick(keybindAttack);
                 }
@@ -260,6 +258,7 @@ public class DigPath1 extends ProcessModule {
     public void onEnable() {
         resetKeybindState();
         mc.thePlayer.sendChatMessage("/hub");
+        Failsafe.pauseOnLeave = false;
         currentState = State.TELEPORTING;
         aote = false;
         current = 0;

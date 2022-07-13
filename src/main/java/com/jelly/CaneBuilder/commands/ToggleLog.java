@@ -7,15 +7,15 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
 
-public class SetDirection extends CommandBase {
+public class ToggleLog extends CommandBase {
     @Override
     public String getCommandName() {
-        return "direction";
+        return "log";
     }
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "Lets you choose the direction of the farm to be N/S or E/W";
+        return "Toggles on/off debug logs";
     }
 
     @Override
@@ -26,19 +26,19 @@ public class SetDirection extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         try {
-            if (Integer.parseInt(args[0]) == 0) {
-                LogUtils.addCustomMessage("Set direction to N/S", EnumChatFormatting.GREEN);
-                BuilderState.direction = 0;
+            if (args[0].equals("on")) {
+                BuilderState.log = true;
+                LogUtils.addCustomMessage("Set debug log to on", EnumChatFormatting.RED);
                 Config.writeConfig();
-            } else if (Integer.parseInt(args[0]) == 1) {
-                LogUtils.addCustomMessage("Set direction to E/W", EnumChatFormatting.GREEN);
-                BuilderState.direction = 1;
+            } else if (args[0].equals("off")){
+                BuilderState.log = false;
+                LogUtils.addCustomMessage("Set debug log to off", EnumChatFormatting.RED);
                 Config.writeConfig();
             } else {
-                LogUtils.addCustomMessage("Error, Usage: /direction [0/1]", EnumChatFormatting.RED);
+                LogUtils.addCustomMessage("Error, Usage: /log [on/off]", EnumChatFormatting.RED);
             }
         } catch (Exception e) {
-            LogUtils.addCustomMessage("Error, Usage: /direction [0/1]", EnumChatFormatting.RED);
+            LogUtils.addCustomMessage("Error, Usage: /log [on/off]", EnumChatFormatting.RED);
         }
     }
 }

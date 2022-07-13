@@ -1,8 +1,9 @@
 package com.jelly.CaneBuilder.utils;
 import com.jelly.CaneBuilder.BuilderState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.BlockPos;
 
-public class AngleUtils extends Utils{
+public class AngleUtils extends LogUtils {
     private static Minecraft mc = Minecraft.getMinecraft();
 
 
@@ -12,14 +13,6 @@ public class AngleUtils extends Utils{
 
     public static float get360RotationYaw(float yaw) {
         return (yaw % 360 + 360) % 360;
-    }
-
-    public static float getOppositeAngle(int angle) {
-        return (angle < 180) ? angle + 180 : angle - 180;
-    }
-
-    public static boolean shouldRotateClockwise(float initialYaw360, float targetYaw360) {
-        return clockwiseDifference(initialYaw360, targetYaw360) < 180;
     }
 
     public static float clockwiseDifference(float initialYaw360, float targetYaw360) {
@@ -34,128 +27,25 @@ public class AngleUtils extends Utils{
         return Math.min(clockwiseDifference(initialYaw360, targetYaw360), antiClockwiseDifference(initialYaw360, targetYaw360));
     }
 
-    public static void smoothRotateTo(float targetYaw360, float speed) {
-        if (shouldRotateClockwise(get360RotationYaw(), targetYaw360)) {
-            smoothRotateClockwise(clockwiseDifference(get360RotationYaw(), targetYaw360), speed);
-        } else {
-            smoothRotateAnticlockwise(antiClockwiseDifference(get360RotationYaw(), targetYaw360), speed);
+
+    public static int getRelativeYawFromBlockPos(BlockPos facingBlockPos) {
+        if (BlockUtils.getBlockPosAround(1, 0, 0).equals(facingBlockPos) || BlockUtils.getBlockPosAround(1, 0, 1).equals(facingBlockPos)) {
+            LogUtils.addCustomLog("Right");
+            return 90;
+        } else if (BlockUtils.getBlockPosAround(-1, 0, 0).equals(facingBlockPos) || BlockUtils.getBlockPosAround(-1, 0, 1).equals(facingBlockPos)) {
+            LogUtils.addCustomLog("Left");
+            return -90;
+        } else if (BlockUtils.getBlockPosAround(0, 1, 0).equals(facingBlockPos)  || BlockUtils.getBlockPosAround(0, 0, 0).equals(facingBlockPos)
+        || BlockUtils.getBlockPosAround(0, 1, 1).equals(facingBlockPos)) {
+            LogUtils.addCustomLog("Forward");
+            return 0;
+        } else if (BlockUtils.getBlockPosAround(0, -1, 0).equals(facingBlockPos) || BlockUtils.getBlockPosAround(0, -1, 1).equals(facingBlockPos)) {
+            LogUtils.addCustomLog("Backward " + facingBlockPos);
+            return 180;
         }
-    }
+        LogUtils.addCustomLog("Can't find " + facingBlockPos);
+        return -1;
 
-    public static void smoothRotateClockwise(float rotateAngle) {
-        smoothRotateClockwise(rotateAngle, 1);
-    }
-
-    public static void smoothRotateClockwise(float rotateAngle, float speed) {
-        float targetYaw = (get360RotationYaw() + rotateAngle) % 360;
-        while (get360RotationYaw() != targetYaw) {
-            if (Math.abs(get360RotationYaw() - targetYaw) < speed) {
-                mc.thePlayer.rotationYaw += Math.abs(get360RotationYaw() - targetYaw);
-                return;
-            }
-            mc.thePlayer.rotationYaw += (0.3f + Utils.nextInt(3) / 10.0f) * speed;
-            try {
-                Thread.sleep(1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void sineRotateCW(float rotateAngle, float speed) {
-        float targetYaw = (get360RotationYaw() + rotateAngle) % 360;
-        while (get360RotationYaw() != targetYaw) {
-            float difference = Math.abs(get360RotationYaw() - targetYaw);
-            if (difference < 0.4f * speed) {
-                mc.thePlayer.rotationYaw += difference;
-                return;
-            }
-            mc.thePlayer.rotationYaw += speed * 0.3 * ((difference / rotateAngle) + (Math.PI / 2));
-            try {
-                Thread.sleep(1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void smoothRotateAnticlockwise(float rotateAngle) {
-        smoothRotateAnticlockwise(rotateAngle, 1);
-    }
-
-    public static void smoothRotateAnticlockwise(float rotateAngle, float speed) {
-        float targetYaw = get360RotationYaw(get360RotationYaw() - rotateAngle);
-        while (get360RotationYaw() != targetYaw) {
-            if (Math.abs(get360RotationYaw() - targetYaw) < speed) {
-                mc.thePlayer.rotationYaw -= Math.abs(get360RotationYaw() - targetYaw);
-                return;
-            }
-            mc.thePlayer.rotationYaw -= (0.3f + Utils.nextInt(3) / 10.0f) * speed;
-            try {
-                Thread.sleep(1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void sineRotateACW(float rotateAngle, float speed) {
-        float targetYaw = get360RotationYaw(get360RotationYaw() - rotateAngle);
-        while (get360RotationYaw() != targetYaw) {
-            float difference = Math.abs(get360RotationYaw() - targetYaw);
-            if (difference < 0.4f * speed) {
-                mc.thePlayer.rotationYaw -= difference;
-                return;
-            }
-            mc.thePlayer.rotationYaw -= speed * 0.3 * ((difference / rotateAngle) + (Math.PI / 2));
-            try {
-                Thread.sleep(1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static float getActualRotationYaw() { //f3
-        return getActualRotationYaw(mc.thePlayer.rotationYaw);
-    }
-
-    public static float getActualRotationYaw(float yaw) { //f3
-        return yaw > 0 ?
-                (yaw % 360 > 180 ? -(180 - (yaw % 360 - 180)) : yaw % 360) :
-                (-yaw % 360 > 180 ? (180 - (-yaw % 360 - 180)) : -(-yaw % 360));
-    }
-
-    public static void hardRotate(float yaw360) {
-        while (get360RotationYaw() != yaw360) {
-            if (Math.abs(get360RotationYaw() - yaw360) < 0.2f) {
-                mc.thePlayer.rotationYaw = yaw360;
-                return;
-            }
-            if (shouldRotateClockwise(get360RotationYaw(), yaw360)) {
-                mc.thePlayer.rotationYaw += 0.1f;
-            } else {
-                mc.thePlayer.rotationYaw -= 0.1f;
-            }
-        }
-    }
-
-    public synchronized static void smoothRotatePitchTo(final int targetPitch, double speed) {
-        while (Minecraft.getMinecraft().thePlayer.rotationPitch != targetPitch) {
-            if (Math.abs(Minecraft.getMinecraft().thePlayer.rotationPitch  - targetPitch) < 1f * speed) {
-                Minecraft.getMinecraft().thePlayer.rotationPitch = targetPitch;
-                return;
-            }
-            if(targetPitch <  Minecraft.getMinecraft().thePlayer.rotationPitch )
-                Minecraft.getMinecraft().thePlayer.rotationPitch  -= (0.3f + nextInt(3) / 10.0f) * speed;
-            else
-                Minecraft.getMinecraft().thePlayer.rotationPitch  += (0.3f + nextInt(3) / 10.0f) * speed;
-            try {
-                Thread.sleep(1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public static float getClosest() {
