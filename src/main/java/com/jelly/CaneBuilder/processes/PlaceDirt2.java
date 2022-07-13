@@ -11,6 +11,11 @@ import net.minecraft.util.EnumFacing;
 public class PlaceDirt2 extends ProcessModule{
     @Override
     public void onTick() {
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
+        }
+
         mc.thePlayer.inventory.currentItem = 0;
 
         boolean shouldPlace = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;

@@ -19,6 +19,11 @@ public class PlaceDirt3 extends ProcessModule {
     @Override
     public void onTick() {
 
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
+        }
+
         if (!onSecondLayer) {
             mc.thePlayer.inventory.currentItem = 7;
             if (mc.objectMouseOver != null && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1))

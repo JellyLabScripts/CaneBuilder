@@ -29,6 +29,10 @@ public class FillTrench extends ProcessModule {
     @Override
     public void onTick() {
 
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
+        }
         if (aote) {
             resetKeybindState();
             setKeyBindState(keybindUseItem, true);

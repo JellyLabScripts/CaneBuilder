@@ -27,6 +27,11 @@ public class DigPath2 extends ProcessModule {
     @Override
     public void onTick() {
 
+        if (rotation.rotating) {
+            resetKeybindState();
+            return;
+        }
+
         if (aote) {
             mc.thePlayer.inventory.currentItem = 6;
             resetKeybindState();
