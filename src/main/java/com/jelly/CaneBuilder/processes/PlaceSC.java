@@ -1,5 +1,6 @@
 package com.jelly.CaneBuilder.processes;
 
+import com.jelly.CaneBuilder.handlers.KeyBindHandler;
 import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.*;
 
@@ -133,7 +134,13 @@ public class PlaceSC extends ProcessModule {
         currentState = State.START;
         ExecuteRunnable(new Thread(() -> {
             try {
+                rotation.easeTo(AngleUtils.getClosest(), 89, 500);
                 threadSleep(500);
+                //AOTE
+                mc.thePlayer.inventory.currentItem = 6;
+                KeyBindHandler.setKeyBindState(keybindUseItem, true);
+                threadSleep(200);
+                KeyBindHandler.setKeyBindState(keybindUseItem, false);
                 //autosell dirt
                 threadSleep(500);
                 mc.thePlayer.inventory.currentItem = 8;
@@ -149,7 +156,6 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(500);
                 mc.thePlayer.closeScreen();
                 threadSleep(500);
-                ProcessUtils.setRancherBootsTo200();
                 //clear hotbar
                 InventoryUtils.openInventory();
                 for(int i = 0; i < 8; i++) {
@@ -161,13 +167,8 @@ public class PlaceSC extends ProcessModule {
                 Thread.sleep(500);
                 mc.thePlayer.closeScreen();
                 Thread.sleep(500);
-                //init pos
-                LogUtils.addCustomLog("Initializing place sugarcane");
-                threadSleep(500);
-                rotation.easeTo(AngleUtils.parallelToC1(), 50f, 1000);
-                while (rotation.rotating)
-                    threadSleep(1);
-                threadSleep(500);
+                ProcessUtils.setRancherBootsTo200();
+                Thread.sleep(500);
                 lastState = State.START;
                 currentState = State.NONE;
                 targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
