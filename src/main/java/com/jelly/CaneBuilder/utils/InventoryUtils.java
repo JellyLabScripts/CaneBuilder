@@ -24,19 +24,11 @@ public class InventoryUtils {
         int speed = -1;
         if (stack != null && stack.hasTagCompound()) {
             final NBTTagCompound tag = stack.getTagCompound();
-<<<<<<< HEAD
-            Utils.addCustomMessage(tag.toString());
-            if (tag.hasKey("ExtraAttributes")) {
-                final NBTTagCompound ea = tag.getCompoundTag("ExtraAttributes");
-                if (ea.hasKey("ranchers_speed")){
-                    return ea.getInteger("ranchers_speed");
-=======
             final Pattern pattern = Pattern.compile("(Current Speed Cap: §a\\d+)", Pattern.MULTILINE);
             final Matcher matcher = pattern.matcher(tag.toString());
             while (matcher.find()) {
                 if (matcher.group(0) != null) {
                     speed = Integer.parseInt((matcher.group(0).replaceAll("Current Speed Cap: §a" ,"")));
->>>>>>> 64f5f078b38ac0c844d7afc761ed0e5e400fb22d
                 }
             }
         }
