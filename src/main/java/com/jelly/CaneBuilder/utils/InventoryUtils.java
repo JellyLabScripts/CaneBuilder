@@ -172,7 +172,6 @@ public class InventoryUtils {
     }
 
     public static void openInventory(){
-        mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
         mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
     }
 
