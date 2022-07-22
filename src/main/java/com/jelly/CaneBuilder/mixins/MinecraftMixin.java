@@ -19,9 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public class MinecraftMixin {
-    /*
-     *  @Author Apfelsaft gigachad
-     */
+
+    // Credit to Apfelsaft gigachad
 
     @Shadow
     public GuiScreen currentScreen;

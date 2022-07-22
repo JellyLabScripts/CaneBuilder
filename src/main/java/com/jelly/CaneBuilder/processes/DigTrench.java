@@ -71,28 +71,28 @@ public class DigTrench extends ProcessModule {
 
             case DROP_DIG:
                 if (!BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 1, -1))) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 1, -1))) {
                         onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 60, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 2, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 2, -1))) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 2, -1))) {
                         onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 50, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 3, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 3, -1))) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 3, -1))) {
                         onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 30, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 4, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 4, -1))) {
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 4, -1))) {
                         onTick(keybindAttack);
                         return;
                     } else {

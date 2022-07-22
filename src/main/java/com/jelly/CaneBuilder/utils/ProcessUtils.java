@@ -47,9 +47,7 @@ public class ProcessUtils {
             mc.thePlayer.inventory.currentItem = 0;
             Thread.sleep(500);
             MacroHandler.playerRotation.easeTo(AngleUtils.getClosest(), 89, 2000);
-            while(!MacroHandler.playerRotation.completed)
-                Thread.sleep(1);
-            Thread.sleep(500);
+            Thread.sleep(2200);
             while(((int)mc.thePlayer.posY - BuilderState.corner1.getY() < 8)){
                 if (jumpCooldown.passed()) {
                     resetKeybindState();

@@ -43,7 +43,7 @@ public class PlaceDirt5 extends ProcessModule {
         if (aote) {
             resetKeybindState();
             setKeyBindState(keybindUseItem, true);
-            if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5) {
+            if (Math.abs(mc.thePlayer.posX % 1) == 0.5 && Math.abs(mc.thePlayer.posZ % 1) == 0.5 && (int)mc.thePlayer.posY <= BuilderState.corner1.getY() + 3) {
                 aote = false;
                 rotation.reset();
                 rotation.easeTo(AngleUtils.get360RotationYaw(), onSecondLayer ? 82 : 89, 500);
@@ -97,6 +97,11 @@ public class PlaceDirt5 extends ProcessModule {
             }
         } else {
 
+            if((int)mc.thePlayer.posY > BuilderState.corner1.getY() + 3){
+                MacroHandler.disableScript("Wrong y level detected. Probably lag or you set the wrong y level");
+                return;
+
+            }
             if (setTP) {
                 if (tpSet.passed()) {
                     mc.thePlayer.sendChatMessage("/setspawn");
