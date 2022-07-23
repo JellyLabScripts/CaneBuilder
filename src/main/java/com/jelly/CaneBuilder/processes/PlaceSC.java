@@ -243,7 +243,7 @@ public class PlaceSC extends ProcessModule {
                         LogUtils.addCustomLog("Finished buying sugarcane from bazaar");
 
                     } else {
-                        LogUtils.addCustomLog("Didn't open bazaar. Disabling script");
+                        MacroHandler.disableScript("Didn't open bazaar. Disabling script");
                     }
                 } else if (!InventoryUtils.hasSugarcaneInHotbar()) {
                     LogUtils.addCustomLog("Preparing to move sugarcane to hotbar");

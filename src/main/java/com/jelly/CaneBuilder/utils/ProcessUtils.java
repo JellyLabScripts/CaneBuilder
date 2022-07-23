@@ -25,6 +25,8 @@ public class ProcessUtils {
         try {
             BuilderState.isSwitchingLayer = true;
             Thread.sleep(2000);
+            MacroHandler.playerRotation.easeTo(AngleUtils.getClosest(), 89, 800);
+            Thread.sleep(1000);
             mc.thePlayer.inventory.currentItem = 8;
             Thread.sleep(100);
             if(mc.currentScreen == null)
@@ -44,10 +46,8 @@ public class ProcessUtils {
             clickWindow(mc.thePlayer.openContainer.windowId, InventoryUtils.getFirstSlotWithDirt(), 0, 1);
             Thread.sleep(500);
             mc.thePlayer.closeScreen();
+            disableJumpPotion();
             mc.thePlayer.inventory.currentItem = 0;
-            Thread.sleep(500);
-            MacroHandler.playerRotation.easeTo(AngleUtils.getClosest(), 89, 2000);
-            Thread.sleep(2200);
             while(((int)mc.thePlayer.posY - BuilderState.corner1.getY() < 8)){
                 if (jumpCooldown.passed()) {
                     resetKeybindState();
