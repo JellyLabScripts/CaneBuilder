@@ -32,7 +32,7 @@ public class DigPath1 extends ProcessModule {
 
     @Override
     public void onTick() {
-        if (rotation.rotating  || ScoreboardUtils.getLocation() != ScoreboardUtils.location.ISLAND) {
+        if (rotation.rotating || ScoreboardUtils.getLocation() != ScoreboardUtils.location.ISLAND) {
             resetKeybindState();
             return;
         }
@@ -151,7 +151,7 @@ public class DigPath1 extends ProcessModule {
                     }
                     resetKeybindState();
                     currentState = State.MAIN_OUTER;
-                    rotation.easeTo(AngleUtils.perpendicularToC2(), 89, 600);
+                    rotation.easeTo(AngleUtils.perpendicularToC2(), 89, 300);
                     mc.thePlayer.inventory.currentItem = 6;
                     aote = true;
                     pitch = mc.thePlayer.rotationPitch;
@@ -166,7 +166,7 @@ public class DigPath1 extends ProcessModule {
                   BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt) &&
                   (int) mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     resetKeybindState();
-                    rotation.easeTo(AngleUtils.parallelToC2(), 89, 600);
+                    rotation.easeTo(AngleUtils.parallelToC2(), 89, 300);
                     currentState = State.PREP_INNER;
                     mc.thePlayer.inventory.currentItem = 6;
                     aote = true;
@@ -192,7 +192,7 @@ public class DigPath1 extends ProcessModule {
                   BlockUtils.getBlockAround(0, -2, 0).equals(Blocks.dirt) &&
                   (int) mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     resetKeybindState();
-                    rotation.easeTo(AngleUtils.perpendicularToC1(), 89, 600);
+                    rotation.easeTo(AngleUtils.perpendicularToC1(), 89, 300);
                     currentState = State.MAIN_INNER;
                     mc.thePlayer.inventory.currentItem = 6;
                     aote = true;
@@ -213,7 +213,7 @@ public class DigPath1 extends ProcessModule {
                   BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt) &&
                   (int) mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     resetKeybindState();
-                    rotation.easeTo(AngleUtils.perpendicularToC2(), 89, 600);
+                    rotation.easeTo(AngleUtils.perpendicularToC2(), 89, 300);
                     currentState = State.WALK_BACK_MAIN;
                     mc.thePlayer.inventory.currentItem = 6;
                     aote = true;
@@ -240,7 +240,7 @@ public class DigPath1 extends ProcessModule {
                   BlockUtils.getBlockAround(0, 1, 0).equals(Blocks.dirt) &&
                   (int) mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
                     resetKeybindState();
-                    rotation.easeTo(AngleUtils.parallelToC2(), 89, 600);
+                    rotation.easeTo(AngleUtils.parallelToC2(), 89, 300);
                     currentState = State.DIG_SIDE;
                     current = 1;
                     mc.thePlayer.inventory.currentItem = 6;

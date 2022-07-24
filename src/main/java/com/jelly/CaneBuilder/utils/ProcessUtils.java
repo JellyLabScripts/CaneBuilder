@@ -4,11 +4,15 @@ import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.handlers.KeyBindHandler;
 import com.jelly.CaneBuilder.handlers.MacroHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.potion.Potion;
+import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
@@ -18,6 +22,7 @@ public class ProcessUtils {
 
 
     static Minecraft mc = Minecraft.getMinecraft();
+
 
 
     public static void switchLayer(){
@@ -120,19 +125,22 @@ public class ProcessUtils {
         Thread.sleep(1000);
         Method m = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
         m.setAccessible(true);
-        m.invoke(mc.currentScreen, '\r', 14);
-        Thread.sleep(500);
-        m.invoke(mc.currentScreen, '\r', 14);
-        Thread.sleep(500);
-        m.invoke(mc.currentScreen, '\r', 14);
-        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '\b', 14);
+        Thread.sleep(250);
+        m.invoke(mc.currentScreen, '\b', 14);
+        Thread.sleep(450);
+        m.invoke(mc.currentScreen, '\b', 14);
+        Thread.sleep(300);
         m.invoke(mc.currentScreen, '4', 16);
-        Thread.sleep(500);
+        Thread.sleep(350);
         m.invoke(mc.currentScreen, '0', 16);
-        Thread.sleep(500);
+        Thread.sleep(250);
         m.invoke(mc.currentScreen, '0', 16);
-        Thread.sleep(500);
-        mc.thePlayer.closeScreen();
+        Thread.sleep(400);
+        Field f = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredField("field_146848_f");
+        f.setAccessible(true);
+        ((TileEntitySign)(f.get(mc.currentScreen))).markDirty();
+        mc.displayGuiScreen((GuiScreen)null);
         Thread.sleep(500);
         mc.thePlayer.inventory.currentItem = 0;
         KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
@@ -148,7 +156,6 @@ public class ProcessUtils {
             mc.thePlayer.closeScreen();
             return;
         }
-
         Thread.sleep(500);
         InventoryUtils.openInventory();
         Thread.sleep(500);
@@ -166,19 +173,22 @@ public class ProcessUtils {
         Thread.sleep(1000);
         Method m = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredMethod("func_73869_a", char.class, int.class);
         m.setAccessible(true);
-        m.invoke(mc.currentScreen, '\r', 14);
-        Thread.sleep(500);
-        m.invoke(mc.currentScreen, '\r', 14);
-        Thread.sleep(500);
-        m.invoke(mc.currentScreen, '\r', 14);
-        Thread.sleep(500);
+        m.invoke(mc.currentScreen, '\b', 14);
+        Thread.sleep(250);
+        m.invoke(mc.currentScreen, '\b', 14);
+        Thread.sleep(350);
+        m.invoke(mc.currentScreen, '\b', 14);
+        Thread.sleep(250);
         m.invoke(mc.currentScreen, '2', 16);
-        Thread.sleep(500);
+        Thread.sleep(350);
         m.invoke(mc.currentScreen, '0', 16);
-        Thread.sleep(500);
+        Thread.sleep(400);
         m.invoke(mc.currentScreen, '0', 16);
-        Thread.sleep(500);
-        mc.thePlayer.closeScreen();
+        Thread.sleep(300);
+        Field f = ((GuiEditSign) mc.currentScreen).getClass().getDeclaredField("field_146848_f");
+        f.setAccessible(true);
+        ((TileEntitySign)(f.get(mc.currentScreen))).markDirty();
+        mc.displayGuiScreen((GuiScreen)null);
         Thread.sleep(500);
         mc.thePlayer.inventory.currentItem = 0;
         KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());

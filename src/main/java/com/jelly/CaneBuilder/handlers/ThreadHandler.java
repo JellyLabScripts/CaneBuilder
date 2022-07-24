@@ -26,6 +26,7 @@ public class ThreadHandler {
                 LogUtils.addCustomLog("Threads interrupted");
                 t.interrupt();
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         currentThreads.clear();

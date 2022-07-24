@@ -10,6 +10,7 @@ import com.jelly.CaneBuilder.player.Rotation;
 import com.jelly.CaneBuilder.utils.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -21,6 +22,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.logging.log4j.LogManager;
+
+import java.lang.reflect.Field;
 
 /*
  ** @author JellyLab, Polycrylate
@@ -46,6 +50,9 @@ public class CaneBuilder {
             Config.readConfig();
         } catch (Exception e) {
             System.out.println("Error reading config file");
+        }
+        for(Field f : GuiEditSign.class.getDeclaredFields()){
+            LogManager.getContext().getLogger(MODID).info(f.toString() + " " + f.getType());
         }
         System.out.println("Registering");
         MinecraftForge.EVENT_BUS.register(new CaneBuilder());

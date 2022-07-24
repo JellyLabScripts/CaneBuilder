@@ -173,6 +173,7 @@ public class PlaceSC extends ProcessModule {
                 currentState = State.NONE;
                 targetBlockPos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
             } catch (Exception e) {
+                e.printStackTrace();
                 MacroHandler.disableScript();
             }
         }));
