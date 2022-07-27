@@ -6,13 +6,17 @@ import static com.jelly.CaneBuilder.handlers.KeyBindHandler.*;
 
 import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
+import com.jelly.CaneBuilder.utils.BlockUtils;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 
 
 public class PlaceDirt1 extends ProcessModule {
     @Override
     public void onTick() {
-        mc.thePlayer.inventory.currentItem = 1;
+        mc.thePlayer.inventory.currentItem =
+                BlockUtils.getXZBlockDistanceBetweenTwoBlock(
+                        BlockUtils.getPlayerLoc(), new BlockPos(BuilderState.corner1.getX(), BuilderState.corner1.getY(), BuilderState.corner1.getZ())) < 2 ? 7 : 0;
 
         if (rotation.rotating) {
             resetKeybindState();

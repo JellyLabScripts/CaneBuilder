@@ -47,7 +47,7 @@ public class PlaceDirt5 extends ProcessModule {
                 aote = false;
                 rotation.reset();
                 rotation.easeTo(AngleUtils.get360RotationYaw(), onSecondLayer ? 82 : 89, 500);
-                mc.thePlayer.inventory.currentItem = 1;
+                mc.thePlayer.inventory.currentItem = 0;
                 setKeyBindState(keybindUseItem, false);
             }
             return;
@@ -110,7 +110,7 @@ public class PlaceDirt5 extends ProcessModule {
                 resetKeybindState();
                 return;
             }
-            mc.thePlayer.inventory.currentItem = 1;
+            mc.thePlayer.inventory.currentItem = 0;
             boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
             boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner2.getParallel();
 
@@ -128,9 +128,9 @@ public class PlaceDirt5 extends ProcessModule {
     public void onEnable() {
         Failsafe.pauseOnLeave = false;
         setTP = false;
-        mc.thePlayer.inventory.currentItem = 1;
+        mc.thePlayer.inventory.currentItem = 0;
         onSecondLayer = (int)mc.thePlayer.posY - BuilderState.corner1.getY() == 3;
-        mc.thePlayer.inventory.currentItem = 1;
+        mc.thePlayer.inventory.currentItem = 0;
         mc.thePlayer.sendChatMessage("/hub");
         currentState = State.TELEPORTING;
         teleportWait.schedule(2000);

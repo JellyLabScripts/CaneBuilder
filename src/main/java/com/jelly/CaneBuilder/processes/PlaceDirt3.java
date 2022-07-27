@@ -41,7 +41,7 @@ public class PlaceDirt3 extends ProcessModule {
                 updateKeys(false, false, false, false, false, shouldPlace, true);
             }
         } else {
-            mc.thePlayer.inventory.currentItem = 1;
+            mc.thePlayer.inventory.currentItem = 0;
             boolean shouldPlace = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
             boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner1.getParallel();
 

@@ -52,27 +52,22 @@ public class BlockUtils {
         return block == Blocks.air || block == Blocks.water || block == Blocks.flowing_water || block == Blocks.reeds;
     }
 
-    // 0, 0 = initial block
-    public static Block getBlockAround(int rightOffset, int frontOffset) {
-        return getBlockAround(rightOffset, frontOffset, 0);
+    public static Block getBlock(BlockPos blockPos) {
+        return mc.theWorld.getBlockState(blockPos).getBlock();
     }
-
-    public static Block getBlockAround(int rightOffset, int frontOffset, int upOffset) {
-        int X = (int) Math.round(Math.floor(mc.thePlayer.posX));
-        int Y = (int) Math.round(Math.floor(mc.thePlayer.posY));
-        int Z = (int) Math.round(Math.floor(mc.thePlayer.posZ));
-        return (mc.theWorld.getBlockState(
-          new BlockPos(getUnitZ() * -1 * rightOffset + getUnitX() * frontOffset + X, Y + upOffset,
-            getUnitX() * rightOffset + getUnitZ() * frontOffset + Z)).getBlock());
+    public static BlockPos getPlayerLoc() {
+        return getBlockPosAround(0, 0, 0);
     }
-
     public static Block getBlockAroundFrom(BlockPos from, int rightOffset, int frontOffset, int upOffset) {
         int X = from.getX();
         int Y = from.getY();
         int Z = from.getZ();
-        return (mc.theWorld.getBlockState(
-          new BlockPos(getUnitZ() * -1 * rightOffset + getUnitX() * frontOffset + X, Y + upOffset,
-            getUnitX() * rightOffset + getUnitZ() * frontOffset + Z)).getBlock());
+        return (getBlock(new BlockPos(getUnitZ() * -1 * rightOffset + getUnitX() * frontOffset + X, Y + upOffset,
+            getUnitX() * rightOffset + getUnitZ() * frontOffset + Z)));
+    }
+
+    public static Block getBlockAround(int rightOffset, int frontOffset, int upOffset) {
+        return getBlock(getBlockPosAround(rightOffset, frontOffset, upOffset));
     }
 
     public static BlockPos getBlockPosAround(int rightOffset, int frontOffset, int upOffset) {
@@ -122,9 +117,14 @@ public class BlockUtils {
                 + (b1.getY() - b2.getY()) * (b1.getY() - b2.getY())
                 + (b1.getZ() - b2.getZ()) * (b1.getZ() - b2.getZ()));
     }
+
     public static int getBlockDistanceBetweenTwoBlock(BlockPos b1, BlockPos b2){
         return Math.abs(b1.getX() - b2.getX())
                 + Math.abs((b1.getY() - b2.getY()))
                 + Math.abs((b1.getZ() - b2.getZ()));
+    }
+
+    public static int getXZBlockDistanceBetweenTwoBlock(BlockPos b1, BlockPos b2){
+        return Math.abs(b1.getX() - b2.getX()) + Math.abs((b1.getZ() - b2.getZ()));
     }
 }
