@@ -7,6 +7,7 @@ import com.jelly.CaneBuilder.processes.*;
 import com.jelly.CaneBuilder.structures.Coord;
 import com.jelly.CaneBuilder.utils.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.inventory.Slot;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -124,6 +125,14 @@ public class MacroHandler {
                 return;
             }
         }
+        if(!(processModule instanceof PlaceSC)) {
+            for (String s : requiredSlotsName) {
+                if (!InventoryUtils.hasItemInInventory(s)) {
+                    LogUtils.addCustomMessage("Not enough tools! Read how-to-use!");
+                    return;
+                }
+            }
+        }
         if(processModule instanceof PlaceDirt1) {
             if (Math.floor(mc.thePlayer.posX) == BuilderState.corner1.getX() && Math.floor(mc.thePlayer.posZ) != BuilderState.corner1.getZ()) {
                 LogUtils.addCustomMessage("Stand on 1st corner to start! " + BuilderState.corner1);
@@ -140,6 +149,7 @@ public class MacroHandler {
                 return;
             }
         }
+
         ThreadHandler.executeThread(new Thread(() -> {
             try {
                 if(!(processModule instanceof PlaceSC)) {
@@ -151,6 +161,7 @@ public class MacroHandler {
 
                     InventoryUtils.openInventory();
                     Thread.sleep(500);
+
                     for (int i = 0; i < requiredSlotsName.length; i++) {
                         LogUtils.addCustomLog("Slot for " + requiredSlotsName[i] + " : " + InventoryUtils.getSlotNumberByDisplayName(requiredSlotsName[i]));
 

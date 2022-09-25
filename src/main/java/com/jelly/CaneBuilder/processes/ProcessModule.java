@@ -46,10 +46,6 @@ public abstract class ProcessModule {
         ThreadHandler.executeThread(t);
     }
 
-    protected void onTick(int keyCode) {
-        if (mc.currentScreen == null) {
-            KeyBinding.onTick(keyCode);
-        }
-    }
+
 
 }

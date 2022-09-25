@@ -1,6 +1,7 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
+import com.jelly.CaneBuilder.handlers.KeyBindHandler;
 import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
@@ -72,28 +73,28 @@ public class DigTrench extends ProcessModule {
             case DROP_DIG:
                 if (!BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air)) {
                     if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 1, -1))) {
-                        onTick(keybindAttack);
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 60, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 2, -1).equals(Blocks.air)) {
                     if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 2, -1))) {
-                        onTick(keybindAttack);
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 50, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 3, -1).equals(Blocks.air)) {
                     if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 3, -1))) {
-                        onTick(keybindAttack);
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 30, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 4, -1).equals(Blocks.air)) {
                     if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 4, -1))) {
-                        onTick(keybindAttack);
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 25, 500);
@@ -115,7 +116,7 @@ public class DigTrench extends ProcessModule {
                     return;
                 }
 
-                boolean shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 1 == mc.objectMouseOver.getBlockPos().getY() &&
+                boolean shouldDig = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && BuilderState.corner1.getY() + 1 == mc.objectMouseOver.getBlockPos().getY() &&
                   (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.dirt) || BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 3, 0).equals(Blocks.dirt)) &&
                   (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
@@ -123,13 +124,13 @@ public class DigTrench extends ProcessModule {
                 if (shouldDig) {
                     LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
-                    onTick(keybindAttack);
+                    KeyBindHandler.onTick(keybindAttack);
                 }
                 return;
 
             case JUMP_OUT:
                 if (mc.thePlayer.posY == BuilderState.corner1.getY() + 2) {
-                    KeyBinding.setKeyBindState(keyBindJump, false);
+                    KeyBindHandler.setKeyBindState(keyBindJump, false);
                     resetKeybindState();
                     LogUtils.addCustomLog("Landed, switching to next trench");
                     currentState = State.WALK_NEXT;
@@ -137,7 +138,7 @@ public class DigTrench extends ProcessModule {
                     return;
                 }
                 updateKeys(true, false, false, false, false);
-                KeyBinding.setKeyBindState(keyBindJump, jumpCooldown.passed());
+                KeyBindHandler.setKeyBindState(keyBindJump, jumpCooldown.passed());
                 if (jumpCooldown.passed()) jumpCooldown.schedule(1000);
                 return;
 

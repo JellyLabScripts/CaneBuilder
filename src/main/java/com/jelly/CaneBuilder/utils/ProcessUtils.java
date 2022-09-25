@@ -35,7 +35,7 @@ public class ProcessUtils {
             mc.thePlayer.inventory.currentItem = 8;
             Thread.sleep(100);
             if(mc.currentScreen == null)
-                KeyBinding.onTick(keybindUseItem);
+                KeyBindHandler.onTick(keybindUseItem);
             Thread.sleep(1500);
             clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
             Thread.sleep(1000);
@@ -59,7 +59,7 @@ public class ProcessUtils {
                     setKeyBindState(keyBindJump, true);
                     jumpCooldown.schedule(1000);
                 } else {
-                    boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 2.2f;
+                    boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 2.2f;
                     setKeyBindState(keyBindJump, false);
                     updateKeys(false, false, false, false, false, shouldPlace, true);
                 }
@@ -79,7 +79,7 @@ public class ProcessUtils {
                 LogUtils.addCustomLog("Setting potion effects");
                 Thread.sleep(500);
                 mc.thePlayer.inventory.currentItem = 8;
-                KeyBinding.onTick(keybindUseItem);
+                KeyBindHandler.onTick(keybindUseItem);
                 Thread.sleep(500);
                 clickWindow(mc.thePlayer.openContainer.windowId, 49, 0, 0);
                 Thread.sleep(500);

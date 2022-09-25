@@ -2,6 +2,7 @@ package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
 import com.jelly.CaneBuilder.features.Failsafe;
+import com.jelly.CaneBuilder.handlers.KeyBindHandler;
 import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.*;
 
@@ -81,29 +82,29 @@ public class DigPath1 extends ProcessModule {
 
             case DROP_DIG:
                 if (!BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 1, -1))) {
-                        onTick(keybindAttack);
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 1, -1))) {
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 60, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 2, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 2, -1))) {
-                        onTick(keybindAttack);
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 2, -1))) {
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 50, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 3, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 3, -1))) {
-                        onTick(keybindAttack);
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 3, -1))) {
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 30, 500);
                     }
                 } else if (!BlockUtils.getBlockAround(0, 4, -1).equals(Blocks.air)) {
-                    if (mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 4, -1))) {
-                        onTick(keybindAttack);
+                    if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.getBlockPos().equals(BlockUtils.getBlockPosAround(0, 4, -1))) {
+                        KeyBindHandler.onTick(keybindAttack);
                         return;
                     } else {
                         rotation.easeTo(AngleUtils.get360RotationYaw(), 25, 500);
@@ -126,7 +127,7 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                boolean shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
+                boolean shouldDig = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
                   (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.dirt) || BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 3, 0).equals(Blocks.dirt)) &&
                   (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
@@ -134,7 +135,7 @@ public class DigPath1 extends ProcessModule {
                 if (shouldDig) {
                     LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
-                    onTick(keybindAttack);
+                    KeyBindHandler.onTick(keybindAttack);
                 }
                 return;
 
@@ -174,7 +175,7 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
+                shouldDig = mc.objectMouseOver != null &&  mc.objectMouseOver.getBlockPos() != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
                   (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.dirt) || BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.dirt)) &&
                   (lastBroken == null || !lastBroken.equals(mc.objectMouseOver.getBlockPos()) && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY());
 
@@ -182,7 +183,7 @@ public class DigPath1 extends ProcessModule {
                 if (shouldDig) {
                     LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
-                    onTick(keybindAttack);
+                    KeyBindHandler.onTick(keybindAttack);
                 }
                 return;
 
@@ -200,7 +201,7 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                shouldDig = mc.objectMouseOver != null && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY() &&
+                shouldDig = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY == mc.objectMouseOver.getBlockPos().getY() &&
                   BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, -1, 0).equals(Blocks.air) &&
                   !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, -2, 0).equals(Blocks.air);
 
@@ -221,7 +222,7 @@ public class DigPath1 extends ProcessModule {
                     return;
                 }
 
-                shouldDig = mc.objectMouseOver != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
+                shouldDig = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && BuilderState.corner1.getY() + 2 == mc.objectMouseOver.getBlockPos().getY() &&
                   (!BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.air) ||
                     (BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 1, 0).equals(Blocks.air) &&
                       !BlockUtils.getBlockAroundFrom(mc.objectMouseOver.getBlockPos(), 0, 2, 0).equals(Blocks.air))) &&
@@ -231,7 +232,7 @@ public class DigPath1 extends ProcessModule {
                 if (shouldDig) {
                     LogUtils.addCustomLog("Ticking for: " + mc.objectMouseOver.getBlockPos());
                     lastBroken = mc.objectMouseOver.getBlockPos();
-                    onTick(keybindAttack);
+                    KeyBindHandler.onTick(keybindAttack);
                 }
                 return;
 

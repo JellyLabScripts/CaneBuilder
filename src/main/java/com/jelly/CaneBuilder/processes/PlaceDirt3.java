@@ -26,7 +26,7 @@ public class PlaceDirt3 extends ProcessModule {
 
         if (!onSecondLayer) {
             mc.thePlayer.inventory.currentItem = 7;
-            if (mc.objectMouseOver != null && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1))
+            if (mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, 1, -1))
                     && BlockUtils.isWalkable(BlockUtils.getBlockAround(1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(-1, 0, -1)) && BlockUtils.isWalkable(BlockUtils.getBlockAround(0, -1, -1))
                     && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1.2) {
                 onSecondLayer = true;
@@ -36,14 +36,14 @@ public class PlaceDirt3 extends ProcessModule {
                 setKeyBindState(keyBindJump, true);
                 jumpCooldown.schedule(1000);
             } else {
-                boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 1.8;
+                boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.objectMouseOver.sideHit == EnumFacing.UP && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() > 1.8;
                 setKeyBindState(keyBindJump, false);
                 updateKeys(false, false, false, false, false, shouldPlace, true);
             }
         } else {
             mc.thePlayer.inventory.currentItem = 0;
-            boolean shouldPlace = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
-            boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner1.getParallel();
+            boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null&& mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
+            boolean hasPlacedEnd = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtParallel() == BuilderState.corner1.getParallel();
 
             if (hasPlacedEnd) {
                 resetKeybindState();

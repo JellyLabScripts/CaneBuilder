@@ -1,6 +1,7 @@
 package com.jelly.CaneBuilder.processes;
 
 import com.jelly.CaneBuilder.BuilderState;
+import com.jelly.CaneBuilder.handlers.KeyBindHandler;
 import com.jelly.CaneBuilder.handlers.MacroHandler;
 import com.jelly.CaneBuilder.utils.AngleUtils;
 import com.jelly.CaneBuilder.utils.BlockUtils;
@@ -82,7 +83,7 @@ public class FillTrench extends ProcessModule {
             case PLACE_PUMP:
                 if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.air)) {
                     mc.thePlayer.inventory.currentItem = 3;
-                    onTick(keybindUseItem);
+                    KeyBindHandler.onTick(keybindUseItem);
                 } else if (BlockUtils.getBlockAround(0, 1, -1).equals(Blocks.prismarine)) {
                     resetKeybindState();
                     rotation.easeTo(AngleUtils.getClosest() - 13, 42, 500);

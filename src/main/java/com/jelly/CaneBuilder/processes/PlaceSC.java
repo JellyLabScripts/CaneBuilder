@@ -145,7 +145,7 @@ public class PlaceSC extends ProcessModule {
                 threadSleep(500);
                 mc.thePlayer.inventory.currentItem = 8;
                 threadSleep(100);
-                onTick(keybindUseItem);
+                KeyBindHandler.onTick(keybindUseItem);
                 threadSleep(800);
                 clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
                 threadSleep(1000);

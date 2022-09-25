@@ -18,8 +18,8 @@ public class PlaceDirt6 extends ProcessModule{
             return;
         }
 
-        boolean shouldPlace = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
-        boolean hasPlacedEnd = mc.objectMouseOver != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtPerpendicular() == BuilderState.corner2.getPerpendicular();
+        boolean shouldPlace = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && mc.objectMouseOver.sideHit != EnumFacing.UP;
+        boolean hasPlacedEnd = mc.objectMouseOver != null && mc.objectMouseOver.getBlockPos() != null && mc.thePlayer.posY - mc.objectMouseOver.getBlockPos().getY() <= 1 && BuilderState.lookingAtPerpendicular() == BuilderState.corner2.getPerpendicular();
 
         if (hasPlacedEnd) {
             LogUtils.addCustomMessage("Third dirt layer complete!");

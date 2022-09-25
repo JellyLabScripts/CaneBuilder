@@ -74,6 +74,19 @@ public class InventoryUtils {
         }
         return 36;
     }
+    public static boolean hasItemInInventory(String displayName) {
+        for (int i = 9; i < 45; i++) {
+            if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i) != null) {
+                try {
+                    if (Minecraft.getMinecraft().thePlayer.inventoryContainer.inventorySlots.get(i).getStack().getDisplayName().contains(displayName))
+                        return true;
+                } catch (Exception e) {
+
+                }
+            }
+        }
+        return false;
+    }
 
     public static boolean hasSugarcaneInMainInv() {
         for (int i = 9; i < 36; i++) {
@@ -181,7 +194,7 @@ public class InventoryUtils {
             mc.playerController.windowClick(windowID, slotID, mouseButtonClicked, mode, mc.thePlayer);
             LogUtils.addCustomLog("Pressing slot : " + slotID);
         } else {
-            LogUtils.addCustomMessage(EnumChatFormatting.RED + "Didn't open window! This shouldn't happen and the script has been disabled. Please immediately report to the developer.");
+            LogUtils.addCustomMessage(EnumChatFormatting.RED + "Didn't open window! Stopping script");
             updateKeys(false, false, false, false, false, false, false);
             throw new Exception();
         }
