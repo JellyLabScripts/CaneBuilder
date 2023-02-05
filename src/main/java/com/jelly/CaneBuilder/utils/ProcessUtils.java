@@ -81,9 +81,9 @@ public class ProcessUtils {
                 mc.thePlayer.inventory.currentItem = 8;
                 KeyBindHandler.onTick(keybindUseItem);
                 Thread.sleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 49, 0, 0);
+                clickWindow(mc.thePlayer.openContainer.windowId, 51, 0, 0);
                 Thread.sleep(500);
-                clickWindow(mc.thePlayer.openContainer.windowId, 30, 0, 0);
+                clickWindow(mc.thePlayer.openContainer.windowId, 32, 0, 0);
                 Thread.sleep(500);
                 clickWindow(mc.thePlayer.openContainer.windowId, 31, 0, 0);
                 Thread.sleep(500);

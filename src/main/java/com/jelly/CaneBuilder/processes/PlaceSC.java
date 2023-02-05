@@ -143,11 +143,7 @@ public class PlaceSC extends ProcessModule {
                 KeyBindHandler.setKeyBindState(keybindUseItem, false);
                 //autosell dirt
                 threadSleep(500);
-                mc.thePlayer.inventory.currentItem = 8;
-                threadSleep(100);
-                KeyBindHandler.onTick(keybindUseItem);
-                threadSleep(800);
-                clickWindow(mc.thePlayer.openContainer.windowId, 22, 0, 0);
+                mc.thePlayer.sendChatMessage("/trades");
                 threadSleep(1000);
                 while (InventoryUtils.getFirstSlotWithDirt() != -1 && enabled && InventoryUtils.countDirtStack() > 3) {
                     clickWindow(mc.thePlayer.openContainer.windowId, 45 + InventoryUtils.getFirstSlotWithDirt(), 0, 0);

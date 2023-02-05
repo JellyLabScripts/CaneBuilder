@@ -10,7 +10,11 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.lwjgl.input.Keyboard;
+
+import java.lang.reflect.Field;
 
 public class KeyBindHandler {
     static Minecraft mc = Minecraft.getMinecraft();
@@ -25,6 +29,14 @@ public class KeyBindHandler {
     public static KeyBinding keyBindShift = mc.gameSettings.keyBindSneak;
     public static KeyBinding keyBindJump = mc.gameSettings.keyBindJump;
 
+    private static Field mcLeftClickCounter;
+
+    static {
+        mcLeftClickCounter = ReflectionHelper.findField(Minecraft.class, "field_71429_W", "leftClickCounter");
+        if (mcLeftClickCounter != null)
+            mcLeftClickCounter.setAccessible(true);
+
+    }
 
 
     public static void initializeCustomKeybindings() {
@@ -37,6 +49,8 @@ public class KeyBindHandler {
             ClientRegistry.registerKeyBinding(customKeyBind);
         }
     }
+
+
 
     @SubscribeEvent
     public void onKeyPress(InputEvent.KeyInputEvent event) {
@@ -80,6 +94,20 @@ public class KeyBindHandler {
         }
 
     }
+
+    @SubscribeEvent
+    public void tickEvent(TickEvent.PlayerTickEvent event){
+        if(mcLeftClickCounter != null) {
+            if (mc.inGameHasFocus) {
+                try {
+                    mcLeftClickCounter.set(mc, 0);
+                } catch (IllegalAccessException | IndexOutOfBoundsException ignored) {
+
+                }
+            }
+        }
+    }
+
 
 
 
